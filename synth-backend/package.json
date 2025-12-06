@@ -11,7 +11,7 @@
     "express": "^5.1.0",
     "node-cron": "^4.2.1",
     "node-fetch": "^3.3.2",
-    "better-sqlite3": "^9.0.0",
+    "better-sqlite3": "^12.4.6",
     "ws": "^8.18.0"
   }
 }
