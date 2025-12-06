@@ -6,22 +6,13 @@ import cron from "node-cron";
 import http from "http";
 import { WebSocketServer } from "ws";
 
-// ======================================================
-// INIT EXPRESS
-// ======================================================
 const app = express();
 app.use(express.json());
 app.use(cors());
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type");
-  next();
-});
 
-// ======================================================
-// INIT SQLITE (BETTER-SQLITE3)
-// ======================================================
+// =============================
+// DATABASE (better-sqlite3)
+// =============================
 const db = new Database("./database.sqlite");
 
 db.exec(`
@@ -29,25 +20,10 @@ CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   wallet TEXT UNIQUE,
   username TEXT,
-  score INTEGER DEFAULT 0,
   duel_score INTEGER DEFAULT 0,
+  score INTEGER DEFAULT 0,
   balance INTEGER DEFAULT 1000,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-`);
-
-db.exec(`
-CREATE TABLE IF NOT EXISTS bets (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  wallet TEXT,
-  market_id TEXT,
-  question TEXT,
-  side TEXT,
-  amount INTEGER,
-  coeff REAL,
-  potential_win REAL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  status TEXT DEFAULT 'active'
 );
 `);
 
@@ -63,19 +39,44 @@ CREATE TABLE IF NOT EXISTS price_history (
 
 console.log("SQLite ready (better-sqlite3).");
 
-// ======================================================
-// CRON → update Polymarket prices every minute
-// ======================================================
+// =============================
+// HELPERS
+// =============================
+const POLY_URL = "https://gamma-api.polymarket.com/markets?limit=500&active=true";
+
+async function getRandomMarket() {
+  const r = await fetch(POLY_URL);
+  const data = await r.json();
+
+  const valid = data.filter(m => m.outcomes?.includes("Yes") && m.outcomes.includes("No"));
+  if (!valid.length) throw new Error("No markets found");
+
+  const m = valid[Math.floor(Math.random() * valid.length)];
+
+  const outcomes = typeof m.outcomes === "string" ? JSON.parse(m.outcomes) : m.outcomes;
+  const prices = typeof m.outcomePrices === "string" ? JSON.parse(m.outcomePrices) : m.outcomePrices;
+
+  return {
+    id: m.id,
+    question: m.question,
+    yes: Number(prices[outcomes.indexOf("Yes")] || 0),
+    no: Number(prices[outcomes.indexOf("No")] || 0)
+  };
+}
+
+// =============================
+// CRON: PRICE HISTORY
+// =============================
 async function updatePrices() {
   try {
-    const r = await fetch("https://gamma-api.polymarket.com/markets?limit=200&active=true");
+    const r = await fetch(POLY_URL);
     const data = await r.json();
 
-    for (const m of data) {
-      if (!m.outcomes?.includes("Yes") || !m.outcomes?.includes("No")) continue;
+    data.forEach(m => {
+      if (!m.outcomes?.includes("Yes") || !m.outcomes?.includes("No")) return;
 
-      const outcomes = Array.isArray(m.outcomes) ? m.outcomes : JSON.parse(m.outcomes);
-      const prices = Array.isArray(m.outcomePrices) ? m.outcomePrices : JSON.parse(m.outcomePrices);
+      let outcomes = typeof m.outcomes === "string" ? JSON.parse(m.outcomes) : m.outcomes;
+      let prices = typeof m.outcomePrices === "string" ? JSON.parse(m.outcomePrices) : m.outcomePrices;
 
       const yesIdx = outcomes.indexOf("Yes");
       const noIdx = outcomes.indexOf("No");
@@ -84,7 +85,7 @@ async function updatePrices() {
         INSERT INTO price_history (market_id, yes_price, no_price)
         VALUES (?, ?, ?)
       `).run(m.id, Number(prices[yesIdx] || 0), Number(prices[noIdx] || 0));
-    }
+    });
 
     console.log("Price history updated:", new Date().toISOString());
   } catch (err) {
@@ -95,168 +96,122 @@ async function updatePrices() {
 cron.schedule("*/1 * * * *", updatePrices);
 updatePrices();
 
-// ======================================================
-// LOGIN
-// ======================================================
+// =============================
+// LOGIN — wallet ONLY
+// =============================
 app.post("/api/login", (req, res) => {
+  const wallet = req.body.wallet?.trim();
+
+  if (!wallet) return res.status(400).json({ error: "Wallet required" });
+
+  let user = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
+
+  // Create user if not exists
+  if (!user) {
+    db.prepare("INSERT INTO users (wallet, balance) VALUES (?, ?)").run(wallet, 1000);
+    user = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
+    return res.json({ user, created: true });
+  }
+
+  res.json({ user, created: false });
+});
+
+// =============================
+// SET USERNAME
+// =============================
+app.post("/api/set-username", (req, res) => {
   const { wallet, username } = req.body;
 
   if (!wallet || !username)
     return res.status(400).json({ error: "Wallet + username required" });
 
-  const existing = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
+  // Check if username taken
+  const exists = db.prepare(
+    "SELECT * FROM users WHERE username = ? AND wallet != ?"
+  ).get(username, wallet);
 
-  if (existing) {
-    return res.json({ user: existing, created: false });
-  }
+  if (exists) return res.status(400).json({ error: "Username already taken" });
 
-  db.prepare(`
-    INSERT INTO users (wallet, username, balance)
-    VALUES (?, ?, ?)
-  `).run(wallet, username, 1000);
+  db.prepare("UPDATE users SET username = ? WHERE wallet = ?").run(username, wallet);
 
   const user = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
-
-  res.json({ user, created: true });
+  res.json({ status: "ok", user });
 });
 
-// ======================================================
-// RANDOM YES/NO QUESTION (Polymarket)
-// ======================================================
-const GAMMA_URL = "https://gamma-api.polymarket.com/markets?limit=1000&active=true";
-const ALLOWED_CATEGORIES = ["crypto", "politics", "US-current-affairs"];
-
-async function getRandomMarket() {
-  const r = await fetch(GAMMA_URL);
-  const data = await r.json();
-
-  const markets = data
-    .filter(m => m.outcomes?.includes("Yes") && m.outcomes.includes("No"))
-    .filter(m => ALLOWED_CATEGORIES.includes(m.category))
-    .map(m => {
-      const outcomes = Array.isArray(m.outcomes) ? m.outcomes : JSON.parse(m.outcomes);
-      const prices = Array.isArray(m.outcomePrices) ? m.outcomePrices : JSON.parse(m.outcomePrices);
-
-      const yesIdx = outcomes.indexOf("Yes");
-      const noIdx = outcomes.indexOf("No");
-
-      return {
-        id: m.id,
-        question: m.question,
-        yesProb: Number(prices[yesIdx]),
-        noProb: Number(prices[noIdx])
-      };
-    });
-
-  return markets[Math.floor(Math.random() * markets.length)];
-}
-
-app.get("/api/polymarket-question", async (_, res) => {
+// =============================
+// RANDOM POLYMARKET QUESTION
+// =============================
+app.get("/api/polymarket-question", async (req, res) => {
   try {
-    const q = await getRandomMarket();
-    res.json(q);
+    const m = await getRandomMarket();
+    res.json({
+      question: m.question,
+      yesProb: m.yes,
+      noProb: m.no
+    });
   } catch {
-    res.status(500).json({ error: "Failed to fetch question" });
+    res.status(500).json({ error: "Failed to load question" });
   }
 });
 
-// ======================================================
-// WEBSOCKET DUEL MODE
-// ======================================================
-const PORT = 4000;
+// =============================
+// DUEL MODE (PvP)
+// =============================
+const PORT = process.env.PORT || 4000;
 const server = http.createServer(app);
+
 const wss = new WebSocketServer({ server, path: "/duel" });
 
-const waitingPlayers = [];
+const waiting = [];
 const duels = new Map();
-let duelCounter = 1;
-
 const ROUNDS = 5;
-const ROUND_MS = 15000;
+const ROUND_TIME = 15000;
 
-function safeSend(ws, obj) {
+// safe send
+function sendSafe(ws, obj) {
   if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(obj));
 }
 
-function createDuel(p1, p2) {
-  const duelId = "duel-" + duelCounter++;
+function startRound(duel) {
+  duel.currentRound++;
 
-  const duel = {
-    id: duelId,
-    sockets: [p1.ws, p2.ws],
-    wallets: [p1.wallet, p2.wallet],
-    usernames: [p1.username, p2.username],
-    scores: [0, 0],
-    answered: [null, null],
-    round: 0,
-  };
-
-  duels.set(duelId, duel);
-
-  p1.ws.duelId = duelId;
-  p1.ws.playerIndex = 0;
-
-  p2.ws.duelId = duelId;
-  p2.ws.playerIndex = 1;
-
-  duel.sockets.forEach((ws, idx) =>
-    safeSend(ws, {
-      type: "match_found",
-      opponent: {
-        wallet: duel.wallets[1 - idx],
-        username: duel.usernames[1 - idx]
-      },
-      totalRounds: ROUNDS
-    })
-  );
-
-  startRound(duel);
-}
-
-async function startRound(duel) {
-  if (duel.round >= ROUNDS) return finishDuel(duel);
-
-  duel.round++;
   duel.answered = [null, null];
 
-  const q = await getRandomMarket();
-  duel.correct = q.yesProb >= q.noProb ? "yes" : "no";
+  if (duel.currentRound > ROUNDS) return finishDuel(duel);
 
-  duel.sockets.forEach(ws =>
-    safeSend(ws, {
+  getRandomMarket().then(m => {
+    duel.correct = m.yes >= m.no ? "yes" : "no";
+
+    duel.sockets.forEach(ws => sendSafe(ws, {
       type: "round_start",
-      round: duel.round,
+      round: duel.currentRound,
       totalRounds: ROUNDS,
-      question: { text: q.question },
-      roundTime: ROUND_MS / 1000
-    })
-  );
+      question: { text: m.question },
+      roundTime: ROUND_TIME / 1000
+    }));
 
-  duel.timer && clearTimeout(duel.timer);
-  duel.timer = setTimeout(() => endRound(duel), ROUND_MS);
+    duel.timer = setTimeout(() => endRound(duel), ROUND_TIME);
+  });
 }
 
 function endRound(duel) {
   const correct = duel.correct;
 
-  const deltas = [0, 0];
   for (let i = 0; i < 2; i++) {
     if (duel.answered[i] === correct) {
       duel.scores[i] += 10;
-      deltas[i] = 10;
+      db.prepare("UPDATE users SET duel_score = duel_score + 10 WHERE wallet = ?")
+        .run(duel.wallets[i]);
     }
-    db.prepare("UPDATE users SET duel_score = duel_score + ? WHERE wallet = ?")
-      .run(deltas[i], duel.wallets[i]);
   }
 
-  duel.sockets.forEach((ws, idx) =>
-    safeSend(ws, {
+  duel.sockets.forEach((ws, i) =>
+    sendSafe(ws, {
       type: "round_result",
       correctAnswer: correct,
-      yourAnswer: duel.answered[idx],
-      roundDelta: deltas[idx],
-      totalScore: duel.scores[idx],
-      opponentTotalScore: duel.scores[1 - idx]
+      yourAnswer: duel.answered[i],
+      totalScore: duel.scores[i],
+      opponentTotalScore: duel.scores[1 - i]
     })
   );
 
@@ -266,42 +221,78 @@ function endRound(duel) {
 function finishDuel(duel) {
   let winner = "draw";
   if (duel.scores[0] > duel.scores[1]) winner = duel.wallets[0];
-  else if (duel.scores[1] > duel.scores[0]) winner = duel.wallets[1];
+  if (duel.scores[1] > duel.scores[0]) winner = duel.wallets[1];
 
-  duel.sockets.forEach((ws, idx) =>
-    safeSend(ws, {
-      type: "duel_finished",
-      yourScore: duel.scores[idx],
-      opponentScore: duel.scores[1 - idx],
-      winner
-    })
-  );
+  duel.sockets.forEach((ws, i) => sendSafe(ws, {
+    type: "duel_finished",
+    yourScore: duel.scores[i],
+    opponentScore: duel.scores[1 - i],
+    winner
+  }));
 
   duels.delete(duel.id);
 }
 
+function createDuel(p1, p2) {
+  const duel = {
+    id: crypto.randomUUID(),
+    sockets: [p1.ws, p2.ws],
+    wallets: [p1.wallet, p2.wallet],
+    usernames: [p1.username, p2.username],
+    currentRound: 0,
+    scores: [0, 0],
+    answered: [null, null]
+  };
+
+  duels.set(duel.id, duel);
+
+  p1.ws.duel = duel.id;
+  p1.ws.index = 0;
+  p2.ws.duel = duel.id;
+  p2.ws.index = 1;
+
+  duel.sockets.forEach((ws, i) =>
+    sendSafe(ws, {
+      type: "match_found",
+      opponent: {
+        wallet: duel.wallets[1 - i],
+        username: duel.usernames[1 - i]
+      },
+      totalRounds: ROUNDS
+    })
+  );
+
+  startRound(duel);
+}
+
+// =============================
+// WebSocket handler
+// =============================
 wss.on("connection", ws => {
-  ws.on("message", data => {
+  ws.on("message", raw => {
     let msg;
     try {
-      msg = JSON.parse(data);
-    } catch { return; }
+      msg = JSON.parse(raw);
+    } catch {
+      return;
+    }
 
     if (msg.type === "init") {
-      waitingPlayers.push({ ws, wallet: msg.wallet, username: msg.username });
-      safeSend(ws, { type: "waiting" });
+      waiting.push({ ws, wallet: msg.wallet, username: msg.username });
 
-      if (waitingPlayers.length >= 2) {
-        createDuel(waitingPlayers.shift(), waitingPlayers.shift());
+      sendSafe(ws, { type: "waiting" });
+
+      if (waiting.length >= 2) {
+        createDuel(waiting.shift(), waiting.shift());
       }
       return;
     }
 
     if (msg.type === "answer") {
-      const duel = duels.get(ws.duelId);
+      const duel = duels.get(ws.duel);
       if (!duel) return;
 
-      duel.answered[ws.playerIndex] = msg.choice;
+      duel.answered[ws.index] = msg.choice;
 
       if (duel.answered[0] !== null && duel.answered[1] !== null) {
         clearTimeout(duel.timer);
@@ -310,12 +301,12 @@ wss.on("connection", ws => {
     }
   });
 
-  ws.on("close", () => {});
+  ws.on("close", () => console.log("WS disconnect"));
 });
 
-// ======================================================
+// =============================
 // START SERVER
-// ======================================================
+// =============================
 server.listen(PORT, () =>
   console.log(`Backend running on http://localhost:${PORT}`)
 );
