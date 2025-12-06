@@ -245,16 +245,16 @@ function createDuel(p1, p2) {
   p2.ws.duelId = duelId;
   p2.ws.playerIndex = 1;
 
-  duel.sockets.forEach((ws, i) =>
-    safeSend(ws, {
-      type: "match_found",
-      opponent: {
-        wallet: duel.wallets[1 - i],
-        username: duel.usernames[1 - i]
-      },
-      totalRounds: ROUNDS_TOTAL
-    })
-  );
+ duel.sockets.forEach(ws =>
+  safeSend(ws, {
+    type: "round_start",
+    round: duel.currentRound,
+    totalRounds: ROUNDS_TOTAL,
+    question: { text: q.question },   // <-- ВАЖНО!
+    roundTime: ROUND_TIME_MS / 1000
+  })
+);
+
 
   startRound(duel);
 }
