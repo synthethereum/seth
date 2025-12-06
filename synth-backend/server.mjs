@@ -14,12 +14,11 @@ app.use(express.json());
 app.use(cors());
 
 // ----------------------------
-// DATABASE
+// DATABASE INIT
 // ----------------------------
 const db = new Database("./database.sqlite");
 console.log("SQLite loaded (better-sqlite3)");
 
-// USERS TABLE
 db.prepare(`
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,7 +31,6 @@ CREATE TABLE IF NOT EXISTS users (
 )
 `).run();
 
-// BETS
 db.prepare(`
 CREATE TABLE IF NOT EXISTS bets (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -48,7 +46,6 @@ CREATE TABLE IF NOT EXISTS bets (
 )
 `).run();
 
-// PRICE HISTORY
 db.prepare(`
 CREATE TABLE IF NOT EXISTS price_history (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -59,9 +56,8 @@ CREATE TABLE IF NOT EXISTS price_history (
 )
 `).run();
 
-
 // ----------------------------
-// CRON – POLYMARKET PRICES
+// CRON – POLYMARKET PRICE LOGGING
 // ----------------------------
 async function updatePrices() {
   try {
@@ -74,7 +70,7 @@ async function updatePrices() {
     `);
 
     for (const m of data) {
-      if (!m.outcomes?.includes("Yes") || !m.outcomes?.includes("No")) continue;
+      if (!m.outcomes?.includes("Yes") || !m.outcomes.includes("No")) continue;
 
       let outcomes = Array.isArray(m.outcomes) ? m.outcomes : JSON.parse(m.outcomes);
       let prices = Array.isArray(m.outcomePrices) ? m.outcomePrices : JSON.parse(m.outcomePrices);
@@ -82,9 +78,12 @@ async function updatePrices() {
       const yesIdx = outcomes.indexOf("Yes");
       const noIdx = outcomes.indexOf("No");
 
-      insert.run(m.id, Number(prices[yesIdx] || 0), Number(prices[noIdx] || 0));
+      insert.run(
+        m.id,
+        Number(prices[yesIdx] || 0),
+        Number(prices[noIdx] || 0)
+      );
     }
-
     console.log("Price history updated:", new Date().toISOString());
   } catch (e) {
     console.error("CRON ERROR:", e);
@@ -93,7 +92,6 @@ async function updatePrices() {
 
 cron.schedule("*/1 * * * *", updatePrices);
 updatePrices();
-
 
 // ----------------------------
 // LOGIN
@@ -106,10 +104,8 @@ app.post("/api/login", (req, res) => {
   let user = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
 
   if (!user) {
-    db.prepare(`
-      INSERT INTO users (wallet, balance)
-      VALUES (?, 1000)
-    `).run(wallet);
+    db.prepare(`INSERT INTO users (wallet, balance) VALUES (?, 1000)`)
+      .run(wallet);
 
     user = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
     return res.json({ user, created: true });
@@ -141,9 +137,8 @@ app.post("/api/set-username", (req, res) => {
   res.json({ status: "ok", user: updated });
 });
 
-
 // ----------------------------
-// GET MARKETS
+// MARKETS API
 // ----------------------------
 app.get("/api/prediction/markets", async (req, res) => {
   try {
@@ -152,16 +147,13 @@ app.get("/api/prediction/markets", async (req, res) => {
 
     const markets = data
       .filter(m => m.outcomes?.includes("Yes") && m.outcomes.includes("No"))
-      .map(m => {
-        let prices = Array.isArray(m.outcomePrices) ? m.outcomePrices : JSON.parse(m.outcomePrices);
-        return {
-          id: m.id,
-          question: m.question,
-          yesProb: Number(prices[0]),
-          noProb: Number(prices[1]),
-          category: m.category
-        };
-      });
+      .map(m => ({
+        id: m.id,
+        question: m.question || m.title || (m.slug ? m.slug.replace(/-/g, " ") : "Unknown question"),
+        yesProb: Number(m.outcomePrices?.[0]),
+        noProb: Number(m.outcomePrices?.[1]),
+        category: m.category
+      }));
 
     res.json({ markets });
   } catch {
@@ -169,9 +161,8 @@ app.get("/api/prediction/markets", async (req, res) => {
   }
 });
 
-
 // ----------------------------
-// RANDOM YES/NO QUESTION
+// RANDOM MARKET (WITH FALLBACK TEXT)
 // ----------------------------
 const GAMMA_URL = "https://gamma-api.polymarket.com/markets?limit=800&active=true";
 
@@ -180,7 +171,8 @@ async function getRandomYesNoMarket() {
   const data = await r.json();
 
   const valid = data.filter(m =>
-    m.outcomes?.includes("Yes") && m.outcomes.includes("No")
+    m.outcomes?.includes("Yes") &&
+    m.outcomes.includes("No")
   );
 
   if (!valid.length) throw new Error("No markets");
@@ -190,11 +182,21 @@ async function getRandomYesNoMarket() {
   const outs = Array.isArray(m.outcomes) ? m.outcomes : JSON.parse(m.outcomes);
   const prices = Array.isArray(m.outcomePrices) ? m.outcomePrices : JSON.parse(m.outcomePrices);
 
+  const yesIdx = outs.indexOf("Yes");
+  const noIdx = outs.indexOf("No");
+
+  // 🔥 Fallback text
+  const text =
+    m.question ||
+    m.title ||
+    (m.slug ? m.slug.replace(/-/g, " ") : null) ||
+    "Unknown question";
+
   return {
     id: m.id,
-    question: m.question,
-    yesProb: Number(prices[outs.indexOf("Yes")]),
-    noProb: Number(prices[outs.indexOf("No")])
+    question: text,
+    yesProb: Number(prices[yesIdx]),
+    noProb: Number(prices[noIdx])
   };
 }
 
@@ -206,9 +208,8 @@ app.get("/api/polymarket-question", async (req, res) => {
   }
 });
 
-
 // =====================================================================
-// DUEL MODE (PvP)
+// DUEL MODE
 // =====================================================================
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: "/duel" });
@@ -241,7 +242,6 @@ function createDuel(p1, p2) {
 
   p1.ws.duelId = duelId;
   p1.ws.playerIndex = 0;
-
   p2.ws.duelId = duelId;
   p2.ws.playerIndex = 1;
 
@@ -266,7 +266,6 @@ async function startRound(duel) {
   duel.answered = [null, null];
 
   const q = await getRandomYesNoMarket();
-
   duel.correctAnswer = q.yesProb >= q.noProb ? "yes" : "no";
 
   duel.sockets.forEach(ws =>
@@ -285,12 +284,10 @@ async function startRound(duel) {
 
 function endRound(duel) {
   const correct = duel.correctAnswer;
-  const deltas = [0, 0];
 
   for (let i = 0; i < 2; i++) {
     if (duel.answered[i] === correct) {
       duel.scores[i] += 10;
-      deltas[i] = 10;
 
       db.prepare(
         "UPDATE users SET duel_score = duel_score + 10 WHERE wallet = ?"
@@ -354,10 +351,7 @@ wss.on("connection", ws => {
 
       duel.answered[ws.playerIndex] = msg.choice;
 
-      if (
-        duel.answered[0] !== null &&
-        duel.answered[1] !== null
-      ) {
+      if (duel.answered[0] !== null && duel.answered[1] !== null) {
         clearTimeout(duel.timer);
         endRound(duel);
       }
@@ -366,7 +360,6 @@ wss.on("connection", ws => {
 
   ws.on("close", () => console.log("WS disconnected"));
 });
-
 
 // ----------------------------
 // START SERVER
