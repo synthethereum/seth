@@ -1,9 +1,9 @@
 import express from "express";
 import cors from "cors";
-import sqlite3 from "sqlite3";
+import Database from "better-sqlite3";
 import cron from "node-cron";
 import fetch from "node-fetch";
-import { open } from "sqlite";
+const db = new Database("./database.sqlite");
 import http from "http";
 import { WebSocketServer } from "ws";
 
