@@ -366,17 +366,38 @@ async function startRound(duel) {
 
 function endRound(duel) {
   const correct = duel.correctAnswer;
-  const deltas = [0, 0];
 
+  // award points
   for (let i = 0; i < 2; i++) {
     if (duel.answered[i] === correct) {
       duel.scores[i] += 10;
-      deltas[i] = 10;
       db.prepare(
         "UPDATE users SET duel_score = duel_score + 10 WHERE wallet = ?"
       ).run(duel.wallets[i]);
     }
   }
+
+  // send round results
+  duel.sockets.forEach((ws, i) =>
+    safeSend(ws, {
+      type: "round_result",
+      correctAnswer: correct,
+      yourAnswer: duel.answered[i],
+      yourScore: duel.scores[i],
+      opponentScore: duel.scores[1 - i],
+    })
+  );
+
+  // 🔥🔥🔥 ВАЖНО: ЕСЛИ ЭТО ПОСЛЕДНИЙ РАУНД → СРАЗУ ФИНИШ!!! 🔥🔥🔥
+  if (duel.currentRound >= ROUNDS_TOTAL) {
+    setTimeout(() => finishDuel(duel), 2000);
+    return;
+  }
+
+  // иначе → запускаем следующий раунд
+  setTimeout(() => startRound(duel), 2000);
+}
+
 
   duel.sockets.forEach((ws, i) =>
     safeSend(ws, {
