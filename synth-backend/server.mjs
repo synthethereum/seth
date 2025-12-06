@@ -57,13 +57,11 @@ CREATE TABLE IF NOT EXISTS price_history (
 `).run();
 
 // ----------------------------
-// CRON – POLYMARKET PRICE LOGGING
+// CRON – PRICE HISTORY
 // ----------------------------
 async function updatePrices() {
   try {
-    const r = await fetch(
-      "https://gamma-api.polymarket.com/markets?limit=200&active=true"
-    );
+    const r = await fetch("https://gamma-api.polymarket.com/markets?limit=200&active=true");
     const data = await r.json();
 
     const insert = db.prepare(`
@@ -106,18 +104,16 @@ updatePrices();
 app.post("/api/login", (req, res) => {
   const { wallet } = req.body;
 
-  if (!wallet) {
-    return res.status(400).json({ error: "Wallet required" });
-  }
+  if (!wallet) return res.status(400).json({ error: "Wallet required" });
 
   let user = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
 
   if (!user) {
-    db.prepare(
-      `INSERT INTO users (wallet, balance) VALUES (?, 1000)`
-    ).run(wallet);
+    db.prepare(`INSERT INTO users (wallet, balance) VALUES (?, 1000)`)
+      .run(wallet);
 
     user = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
+
     return res.json({ user, created: true });
   }
 
@@ -130,49 +126,34 @@ app.post("/api/login", (req, res) => {
 app.post("/api/set-username", (req, res) => {
   const { wallet, username } = req.body;
 
-  if (!wallet || !username) {
-    return res
-      .status(400)
-      .json({ error: "Wallet + username required" });
-  }
+  if (!wallet || !username)
+    return res.status(400).json({ error: "Wallet + username required" });
 
-  const nameTaken = db
-    .prepare(
-      "SELECT * FROM users WHERE username = ? AND wallet != ?"
-    )
+  const taken = db
+    .prepare("SELECT * FROM users WHERE username = ? AND wallet != ?")
     .get(username, wallet);
 
-  if (nameTaken) {
+  if (taken)
     return res.status(400).json({ error: "Username already taken" });
-  }
 
-  db.prepare("UPDATE users SET username = ? WHERE wallet = ?").run(
-    username,
-    wallet
-  );
+  db.prepare("UPDATE users SET username = ? WHERE wallet = ?")
+    .run(username, wallet);
 
-  const updated = db
-    .prepare("SELECT * FROM users WHERE wallet = ?")
-    .get(wallet);
-
+  const updated = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
   res.json({ status: "ok", user: updated });
 });
 
 // ----------------------------
-// MARKETS API
+// MARKETS LIST
 // ----------------------------
 app.get("/api/prediction/markets", async (req, res) => {
   try {
-    const r = await fetch(
-      "https://gamma-api.polymarket.com/markets?limit=500&active=true"
-    );
+    const r = await fetch("https://gamma-api.polymarket.com/markets?limit=500&active=true");
     const data = await r.json();
 
     const markets = data
-      .filter(
-        (m) => m.outcomes?.includes("Yes") && m.outcomes.includes("No")
-      )
-      .map((m) => {
+      .filter(m => m.outcomes?.includes("Yes") && m.outcomes.includes("No"))
+      .map(m => {
         const prices = Array.isArray(m.outcomePrices)
           ? m.outcomePrices
           : JSON.parse(m.outcomePrices);
@@ -185,38 +166,43 @@ app.get("/api/prediction/markets", async (req, res) => {
             (m.slug ? m.slug.replace(/-/g, " ") : "Unknown question"),
           yesProb: Number(prices[0]),
           noProb: Number(prices[1]),
-          category: m.category,
+          category: m.category
         };
       });
 
     res.json({ markets });
   } catch (e) {
-    console.error("MARKETS ERROR:", e);
+    console.error(e);
     res.status(500).json({ error: "Failed to load markets" });
   }
 });
 
 // ----------------------------
-// RANDOM MARKET (WITH FALLBACK TEXT)
+// RANDOM MARKET FOR GAME
 // ----------------------------
-const GAMMA_URL =
-  "https://gamma-api.polymarket.com/markets?limit=800&active=true";
+const GAMMA_URL = "https://gamma-api.polymarket.com/markets?limit=800&active=true";
 
 async function getRandomYesNoMarket() {
   const r = await fetch(GAMMA_URL);
   const data = await r.json();
 
-  const valid = data.filter(
-    (m) => m.outcomes?.includes("Yes") && m.outcomes.includes("No")
+  const valid = data.filter(m =>
+    m.outcomes?.includes("Yes") &&
+    m.outcomes.includes("No")
   );
 
-  if (!valid.length) throw new Error("No markets");
+  if (!valid.length) {
+    return {
+      id: "fallback",
+      question: "Will ETH be above $1,000 tomorrow?",
+      yesProb: 0.5,
+      noProb: 0.5
+    };
+  }
 
   const m = valid[Math.floor(Math.random() * valid.length)];
 
-  const outs = Array.isArray(m.outcomes)
-    ? m.outcomes
-    : JSON.parse(m.outcomes);
+  const outs = Array.isArray(m.outcomes) ? m.outcomes : JSON.parse(m.outcomes);
   const prices = Array.isArray(m.outcomePrices)
     ? m.outcomePrices
     : JSON.parse(m.outcomePrices);
@@ -224,48 +210,27 @@ async function getRandomYesNoMarket() {
   const yesIdx = outs.indexOf("Yes");
   const noIdx = outs.indexOf("No");
 
-  const text =
-    m.question ||
-    m.title ||
-    (m.slug ? m.slug.replace(/-/g, " ") : null) ||
-    "Unknown question";
-
   return {
     id: m.id,
-    question: text,
+    question:
+      m.question ||
+      m.title ||
+      (m.slug ? m.slug.replace(/-/g, " ") : "Unknown question"),
     yesProb: Number(prices[yesIdx]),
-    noProb: Number(prices[noIdx]),
+    noProb: Number(prices[noIdx])
   };
 }
 
 app.get("/api/polymarket-question", async (req, res) => {
   try {
-    const q = await getRandomYesNoMarket();
-    res.json(q);
+    res.json(await getRandomYesNoMarket());
   } catch (e) {
-    console.error("POLYMARKET QUESTION ERROR:", e);
     res.status(500).json({ error: "Failed" });
   }
 });
 
-// ----------------------------
-// HISTORY FOR GRAPH (OPTIONAL, НО ПУСТЬ БУДЕТ)
-// ----------------------------
-app.get("/api/prediction/market-history/:id", (req, res) => {
-  const rows = db
-    .prepare(
-      `SELECT yes_price, no_price, created_at
-       FROM price_history
-       WHERE market_id = ?
-       ORDER BY id ASC`
-    )
-    .all(req.params.id);
-
-  res.json(rows);
-});
-
 // =====================================================================
-// DUEL MODE
+// DUEL MODE (PvP)
 // =====================================================================
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: "/duel" });
@@ -278,9 +243,7 @@ const ROUNDS_TOTAL = 5;
 const ROUND_TIME_MS = 15000;
 
 function safeSend(ws, obj) {
-  if (ws.readyState === ws.OPEN) {
-    ws.send(JSON.stringify(obj));
-  }
+  if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(obj));
 }
 
 function createDuel(p1, p2) {
@@ -294,57 +257,53 @@ function createDuel(p1, p2) {
     answered: [null, null],
     scores: [0, 0],
     currentRound: 0,
-    timer: null,
+    timer: null
   };
 
   duels.set(duelId, duel);
 
   p1.ws.duelId = duelId;
   p1.ws.playerIndex = 0;
+
   p2.ws.duelId = duelId;
   p2.ws.playerIndex = 1;
 
-  // Сначала говорим фронту, что матч найден
-  duel.sockets.forEach((ws, idx) =>
+  duel.sockets.forEach((ws, i) =>
     safeSend(ws, {
       type: "match_found",
       opponent: {
-        wallet: duel.wallets[1 - idx],
-        username: duel.usernames[1 - idx],
+        wallet: duel.wallets[1 - i],
+        username: duel.usernames[1 - i]
       },
-      totalRounds: ROUNDS_TOTAL,
+      totalRounds: ROUNDS_TOTAL
     })
   );
 
-  // Потом запускаем первый раунд
   startRound(duel);
 }
 
 async function startRound(duel) {
-  if (duel.currentRound >= ROUNDS_TOTAL) {
+  if (duel.currentRound >= ROUNDS_TOTAL)
     return finishDuel(duel);
-  }
 
-  duel.currentRound += 1;
+  duel.currentRound++;
   duel.answered = [null, null];
 
   let q;
   try {
     q = await getRandomYesNoMarket();
-  } catch (e) {
-    console.error("startRound getRandomYesNoMarket ERROR:", e);
-    // Фоллбек – тупой стоковый вопрос, чтобы игра не ломалась
+  } catch {
     q = {
       id: "fallback",
-      question: "Will ETH be above $1,000 tomorrow?",
+      question: "Will Bitcoin go up tomorrow?",
       yesProb: 0.5,
-      noProb: 0.5,
+      noProb: 0.5
     };
   }
 
   duel.correctAnswer = q.yesProb >= q.noProb ? "yes" : "no";
 
-  duel.sockets.forEach((ws) =>
+  duel.sockets.forEach(ws =>
     safeSend(ws, {
       type: "round_start",
       round: duel.currentRound,
@@ -352,22 +311,19 @@ async function startRound(duel) {
       question: {
         text: q.question,
         yesProb: q.yesProb,
-        noProb: q.noProb,
+        noProb: q.noProb
       },
-      roundTime: ROUND_TIME_MS / 1000,
+      roundTime: ROUND_TIME_MS / 1000
     })
   );
 
-  if (duel.timer) {
-    clearTimeout(duel.timer);
-  }
+  if (duel.timer) clearTimeout(duel.timer);
   duel.timer = setTimeout(() => endRound(duel), ROUND_TIME_MS);
 }
 
 function endRound(duel) {
   const correct = duel.correctAnswer;
 
-  // award points
   for (let i = 0; i < 2; i++) {
     if (duel.answered[i] === correct) {
       duel.scores[i] += 10;
@@ -377,38 +333,20 @@ function endRound(duel) {
     }
   }
 
-  // send round results
   duel.sockets.forEach((ws, i) =>
     safeSend(ws, {
       type: "round_result",
       correctAnswer: correct,
       yourAnswer: duel.answered[i],
       yourScore: duel.scores[i],
-      opponentScore: duel.scores[1 - i],
+      opponentScore: duel.scores[1 - i]
     })
   );
 
-  // 🔥🔥🔥 ВАЖНО: ЕСЛИ ЭТО ПОСЛЕДНИЙ РАУНД → СРАЗУ ФИНИШ!!! 🔥🔥🔥
   if (duel.currentRound >= ROUNDS_TOTAL) {
     setTimeout(() => finishDuel(duel), 2000);
     return;
   }
-
-  // иначе → запускаем следующий раунд
-  setTimeout(() => startRound(duel), 2000);
-}
-
-
-  duel.sockets.forEach((ws, i) =>
-    safeSend(ws, {
-      type: "round_result",
-      correctAnswer: correct,
-      yourAnswer: duel.answered[i],
-      roundDelta: deltas[i],
-      totalScore: duel.scores[i],
-      opponentTotalScore: duel.scores[1 - i],
-    })
-  );
 
   setTimeout(() => startRound(duel), 2000);
 }
@@ -423,30 +361,25 @@ function finishDuel(duel) {
       type: "duel_finished",
       yourScore: duel.scores[i],
       opponentScore: duel.scores[1 - i],
-      winner,
+      winner
     })
   );
 
-  if (duel.timer) {
-    clearTimeout(duel.timer);
-  }
+  if (duel.timer) clearTimeout(duel.timer);
   duels.delete(duel.id);
 }
 
-wss.on("connection", (ws) => {
-  ws.on("message", (raw) => {
+// WS HANDLER
+wss.on("connection", ws => {
+  ws.on("message", raw => {
     let msg;
-    try {
-      msg = JSON.parse(raw);
-    } catch {
-      return;
-    }
+    try { msg = JSON.parse(raw); } catch { return; }
 
     if (msg.type === "init") {
       waitingPlayers.push({
         ws,
         wallet: msg.wallet,
-        username: msg.username,
+        username: msg.username
       });
 
       safeSend(ws, { type: "waiting" });
@@ -463,21 +396,14 @@ wss.on("connection", (ws) => {
 
       duel.answered[ws.playerIndex] = msg.choice;
 
-      if (
-        duel.answered[0] !== null &&
-        duel.answered[1] !== null
-      ) {
-        if (duel.timer) {
-          clearTimeout(duel.timer);
-        }
+      if (duel.answered[0] !== null && duel.answered[1] !== null) {
+        if (duel.timer) clearTimeout(duel.timer);
         endRound(duel);
       }
     }
   });
 
-  ws.on("close", () => {
-    console.log("WS disconnected");
-  });
+  ws.on("close", () => console.log("WS disconnected"));
 });
 
 // ----------------------------
