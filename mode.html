@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SynthETH – Select Game Mode</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center">
+
+  <div class="max-w-lg w-full text-center p-6">
+    <img src="/images/synthseth.png"
+     onerror="this.src='/images/synthseth.png'"
+     class="w-16 h-16 mx-auto mb-5 rounded-full">
+
+    <h1 class="text-3xl font-bold mb-6">Choose Your Mode</h1>
+
+    <div class="grid gap-5">
+
+      <!-- Solo Quiz -->
+      <a href="game.html"
+        class="block rounded-xl bg-slate-800 hover:bg-slate-700 transition p-6 border border-slate-700">
+        <h2 class="text-xl font-semibold">📘 Solo Quiz</h2>
+        <p class="text-slate-400 text-sm mt-2">
+          Answer fast. Earn score. Train prediction skills.
+        </p>
+      </a>
+
+      <!-- Duel -->
+      <a href="duel.html"
+        class="block rounded-xl bg-slate-800 hover:bg-slate-700 transition p-6 border border-slate-700">
+        <h2 class="text-xl font-semibold">⚔️ Duel Mode</h2>
+        <p class="text-slate-400 text-sm mt-2">
+          Fight 1v1 in real-time with another player. First to win 5 rounds wins!
+        </p>
+      </a>
+
+      <!-- Prediction Market -->
+      <a href="prediction.html"
+        class="block rounded-xl bg-slate-800 hover:bg-slate-700 transition p-6 border border-slate-700">
+        <h2 class="text-xl font-semibold">📡 Prediction Market</h2>
+        <p class="text-slate-400 text-sm mt-2">
+          Real Polymarket events. Place YES/NO stakes using SynthETH.
+        </p>
+      </a>
+
+    </div>
+
+    <button id="logoutBtn"
+      class="mt-8 text-slate-500 hover:text-red-400 text-sm">
+      Logout
+    </button>
+  </div>
+
+<script>
+  // logout
+  document.getElementById("logoutBtn").onclick = () => {
+    localStorage.removeItem("syntheth_user");
+    window.location.href = "index.html";
+  };
+
+  // redirect to login if no user
+  document.addEventListener("DOMContentLoaded", () => {
+    const raw = localStorage.getItem("syntheth_user");
+    if (!raw) window.location.href = "index.html";
+  });
+</script>
+
+</body>
+</html>

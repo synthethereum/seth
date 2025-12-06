@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>SynthETH – Prediction Market</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .glass {
+        background: rgba(15, 23, 42, 0.9);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+      }
+      .btn-glow:hover {
+        box-shadow: 0 0 18px 0 rgba(45, 212, 191, 0.7);
+      }
+      .fade-in {
+        opacity: 0;
+        transform: translateY(10px);
+        animation: fadeInUp 0.5s ease-out forwards;
+      }
+      @keyframes fadeInUp {
+        0% {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-slate-950 text-slate-100 min-h-screen">
+    <!-- NAVBAR -->
+    <nav
+      id="navbar"
+      class="fixed top-0 left-0 w-full z-40 bg-slate-950/60 backdrop-blur-md border-b border-slate-800"
+    >
+      <div
+        class="max-w-6xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between"
+      >
+        <div
+          class="flex items-center gap-3 cursor-pointer"
+          onclick="window.location.href='mode.html'"
+        >
+          <img
+            src="images/synthseth.png"
+            class="w-8 h-8 rounded-full shadow-lg"
+            alt="SynthETH"
+          />
+          <div>
+            <p class="text-sm font-semibold text-white leading-tight">
+              SynthETH
+            </p>
+            <p class="text-[11px] text-teal-400 uppercase tracking-[0.18em]">
+              Prediction Market
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-6 text-xs md:text-sm">
+          <div class="hidden md:flex flex-col items-end">
+            <span class="text-slate-400">Player</span>
+            <span id="navUsername" class="text-teal-300 font-medium">
+              ...
+            </span>
+          </div>
+          <div class="flex flex-col items-end">
+            <span class="text-slate-400 text-[11px]">Balance</span>
+            <span id="navBalance" class="text-emerald-400 font-semibold">
+              0 SETH
+            </span>
+          </div>
+          <button
+            id="logoutBtn"
+            class="text-slate-400 hover:text-rose-400 text-xs"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="pt-20 pb-10 max-w-6xl mx-auto px-4 md:px-6">
+      <!-- HEADER -->
+      <header class="mb-6 md:mb-8 fade-in">
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between">
+          <div class="mb-4 md:mb-0">
+            <h1 class="text-2xl md:text-3xl font-bold text-white mb-2">
+              Real-World Prediction Markets
+            </h1>
+            <p class="text-slate-400 text-sm md:text-base max-w-2xl">
+              Pick Polymarket events, see implied odds, and place YES/NO stakes
+              using <span class="text-teal-300 font-semibold">SynthETH</span>.
+              All your bets are saved under your wallet.
+            </p>
+          </div>
+          <button
+            onclick="window.location.href='mode.html'"
+            class="inline-flex items-center gap-2 text-xs md:text-sm text-slate-300 hover:text-white border border-slate-700 hover:border-slate-500 rounded-full px-3 py-1.5 transition"
+          >
+            ← Back to Modes
+          </button>
+        </div>
+      </header>
+
+      <!-- MAIN GRID -->
+      <div
+        class="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-6 md:gap-8"
+      >
+        <!-- LEFT: MARKETS LIST -->
+        <section class="glass rounded-2xl p-4 md:p-5 fade-in">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm md:text-base font-semibold text-white">
+              Live Markets
+            </h2>
+            <button
+              id="refreshMarketsBtn"
+              class="text-[11px] uppercase tracking-[0.18em] text-slate-400 hover:text-teal-300"
+            >
+              Refresh
+            </button>
+          </div>
+
+          <div
+            id="marketsList"
+            class="space-y-3 max-h-[520px] overflow-y-auto pr-1"
+          >
+            <p class="text-slate-500 text-sm">
+              Loading markets from Polymarket...
+            </p>
+          </div>
+        </section>
+
+        <!-- RIGHT: SELECTED MARKET + GRAPH + BETS -->
+        <section class="space-y-6 fade-in">
+          <!-- SELECTED MARKET CARD -->
+          <div class="glass rounded-2xl p-4 md:p-5">
+            <div class="flex items-start justify-between gap-3 mb-3">
+              <div>
+                <p
+                  id="selectedCategory"
+                  class="text-[11px] uppercase tracking-[0.18em] text-slate-400 mb-1"
+                >
+                  —
+                </p>
+                <h2
+                  id="selectedQuestion"
+                  class="text-base md:text-lg font-semibold text-white"
+                >
+                  Select a market on the left to see details.
+                </h2>
+              </div>
+              <div
+                id="selectedBadge"
+                class="text-[11px] px-2 py-1 rounded-full border border-slate-700 text-slate-400"
+              >
+                Live
+              </div>
+            </div>
+
+            <div
+              class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mt-4 md:items-end"
+            >
+              <!-- YES -->
+              <div
+                class="border border-emerald-500/40 rounded-xl p-3 bg-emerald-500/5 hover:bg-emerald-500/10 transition cursor-pointer"
+                id="yesCard"
+              >
+                <p class="text-[11px] uppercase tracking-[0.18em] text-emerald-300">
+                  Yes
+                </p>
+                <p
+                  id="yesProbText"
+                  class="text-xl font-bold text-emerald-400 mt-1"
+                >
+                  —
+                </p>
+                <p id="yesCoeffText" class="text-xs text-slate-400 mt-1">
+                  Coeff: —
+                </p>
+                <button
+                  id="yesBetBtn"
+                  class="mt-3 w-full text-xs font-semibold bg-emerald-500 text-slate-950 rounded-lg py-2 hover:bg-emerald-400 transition btn-glow disabled:opacity-40 disabled:cursor-not-allowed"
+                  disabled
+                >
+                  Bet YES
+                </button>
+              </div>
+
+              <!-- NO -->
+              <div
+                class="border border-rose-500/40 rounded-xl p-3 bg-rose-500/5 hover:bg-rose-500/10 transition cursor-pointer"
+                id="noCard"
+              >
+                <p class="text-[11px] uppercase tracking-[0.18em] text-rose-300">
+                  No
+                </p>
+                <p id="noProbText" class="text-xl font-bold text-rose-400 mt-1">
+                  —
+                </p>
+                <p id="noCoeffText" class="text-xs text-slate-400 mt-1">
+                  Coeff: —
+                </p>
+                <button
+                  id="noBetBtn"
+                  class="mt-3 w-full text-xs font-semibold bg-rose-500 text-slate-950 rounded-lg py-2 hover:bg-rose-400 transition btn-glow disabled:opacity-40 disabled:cursor-not-allowed"
+                  disabled
+                >
+                  Bet NO
+                </button>
+              </div>
+
+              <!-- INFO / BALANCE -->
+              <div
+                class="border border-slate-700 rounded-xl p-3 bg-slate-900/60 flex flex-col justify-between"
+              >
+                <div>
+                  <p
+                    class="text-[11px] uppercase tracking-[0.18em] text-slate-400"
+                  >
+                    Wallet
+                  </p>
+                  <p
+                    id="infoWallet"
+                    class="text-xs text-slate-300 mt-1 truncate"
+                  >
+                    0x...
+                  </p>
+                </div>
+                <div class="mt-3">
+                  <p class="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+                    Balance
+                  </p>
+                  <p
+                    id="infoBalance"
+                    class="text-sm font-semibold text-emerald-400 mt-1"
+                  >
+                    0 SETH
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CHART -->
+          <div class="glass rounded-2xl p-4 md:p-5">
+            <div class="flex items-center justify-between mb-2">
+              <p class="text-xs md:text-sm text-slate-300 font-medium">
+                Market Odds Over Time
+              </p>
+              <p
+                id="chartSubtitle"
+                class="text-[11px] text-slate-500 max-w-xs text-right"
+              >
+                Select a market to load its price history.
+              </p>
+            </div>
+            <div class="h-52 md:h-64">
+              <canvas id="oddsChart"></canvas>
+            </div>
+          </div>
+
+          <!-- MY BETS -->
+          <div class="glass rounded-2xl p-4 md:p-5">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm md:text-base font-semibold text-white">
+                My Bets
+              </h3>
+              <span class="text-[11px] text-slate-400"
+                >All bets are tied to your wallet.</span
+              >
+            </div>
+            <div
+              id="myBetsList"
+              class="space-y-2 max-h-64 overflow-y-auto pr-1 text-sm"
+            >
+              <p class="text-slate-500 text-sm">
+                You have no bets yet. Select a market and place your first YES /
+                NO stake.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- BET MODAL -->
+    <div
+      id="betModal"
+      class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden"
+    >
+      <div class="glass rounded-2xl max-w-md w-full p-5 md:p-6">
+        <div class="flex items-start justify-between mb-4">
+          <div>
+            <p
+              id="betSideLabel"
+              class="text-[11px] uppercase tracking-[0.18em] text-slate-400 mb-1"
+            >
+              Bet
+            </p>
+            <h3
+              id="betQuestion"
+              class="text-sm md:text-base font-semibold text-white"
+            >
+              Question
+            </h3>
+          </div>
+          <button
+            id="betModalClose"
+            class="text-slate-400 hover:text-white text-lg leading-none"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div class="mb-4 grid grid-cols-2 gap-3">
+          <div
+            class="border border-slate-700 rounded-xl p-3 bg-slate-900/70 text-sm"
+          >
+            <p class="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+              Side
+            </p>
+            <p id="betSideText" class="mt-1 font-semibold text-teal-300">
+              YES
+            </p>
+          </div>
+          <div
+            class="border border-slate-700 rounded-xl p-3 bg-slate-900/70 text-sm"
+          >
+            <p class="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+              Coefficient
+            </p>
+            <p id="betCoeffText" class="mt-1 font-semibold text-emerald-400">
+              1.80x
+            </p>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label
+            class="block text-xs mb-1 text-slate-300"
+            for="betAmountInput"
+          >
+            Amount (SETH)
+          </label>
+          <div
+            class="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2"
+          >
+            <input
+              id="betAmountInput"
+              type="number"
+              min="1"
+              step="1"
+              class="bg-transparent outline-none flex-1 text-sm text-teal-200 placeholder:text-slate-600"
+              placeholder="Enter stake amount"
+            />
+            <button
+              id="betMaxBtn"
+              class="text-[11px] px-2 py-1 rounded-full border border-slate-600 text-slate-300 hover:border-teal-400 hover:text-teal-300 transition"
+            >
+              MAX
+            </button>
+          </div>
+          <p
+            id="betAmountError"
+            class="text-xs text-rose-400 mt-1 min-h-[1rem]"
+          ></p>
+        </div>
+
+        <div
+          class="mb-4 grid grid-cols-2 gap-3 text-xs md:text-sm text-slate-300"
+        >
+          <div
+            class="border border-slate-700 rounded-xl p-3 bg-slate-900/70 flex flex-col justify-between"
+          >
+            <p class="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+              Potential Win
+            </p>
+            <p id="potentialWinText" class="mt-1 font-semibold text-emerald-400">
+              0 SETH
+            </p>
+          </div>
+          <div
+            class="border border-slate-700 rounded-xl p-3 bg-slate-900/70 flex flex-col justify-between"
+          >
+            <p class="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+              Current Balance
+            </p>
+            <p id="modalBalanceText" class="mt-1 font-semibold text-teal-300">
+              0 SETH
+            </p>
+          </div>
+        </div>
+
+        <button
+          id="confirmBetBtn"
+          class="w-full bg-teal-500 text-slate-950 font-semibold rounded-xl py-2.5 text-sm hover:bg-teal-400 transition btn-glow"
+        >
+          Confirm Bet
+        </button>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE = "http://localhost:4000";
+
+      let currentUser = null;
+      let selectedMarket = null;
+      let currentSide = "yes";
+      let currentCoeff = 1;
+      let marketsCache = [];
+      let oddsChart = null;
+
+      const navUsername = document.getElementById("navUsername");
+      const navBalance = document.getElementById("navBalance");
+      const infoWallet = document.getElementById("infoWallet");
+      const infoBalance = document.getElementById("infoBalance");
+
+      const marketsList = document.getElementById("marketsList");
+      const refreshMarketsBtn = document.getElementById("refreshMarketsBtn");
+
+      const selectedQuestion = document.getElementById("selectedQuestion");
+      const selectedCategory = document.getElementById("selectedCategory");
+      const yesProbText = document.getElementById("yesProbText");
+      const noProbText = document.getElementById("noProbText");
+      const yesCoeffText = document.getElementById("yesCoeffText");
+      const noCoeffText = document.getElementById("noCoeffText");
+      const yesBetBtn = document.getElementById("yesBetBtn");
+      const noBetBtn = document.getElementById("noBetBtn");
+      const yesCard = document.getElementById("yesCard");
+      const noCard = document.getElementById("noCard");
+      const chartSubtitle = document.getElementById("chartSubtitle");
+      const myBetsList = document.getElementById("myBetsList");
+
+      const betModal = document.getElementById("betModal");
+      const betModalClose = document.getElementById("betModalClose");
+      const betSideLabel = document.getElementById("betSideLabel");
+      const betQuestion = document.getElementById("betQuestion");
+      const betSideText = document.getElementById("betSideText");
+      const betCoeffText = document.getElementById("betCoeffText");
+      const betAmountInput = document.getElementById("betAmountInput");
+      const betMaxBtn = document.getElementById("betMaxBtn");
+      const betAmountError = document.getElementById("betAmountError");
+      const potentialWinText = document.getElementById("potentialWinText");
+      const modalBalanceText = document.getElementById("modalBalanceText");
+      const confirmBetBtn = document.getElementById("confirmBetBtn");
+
+      const logoutBtn = document.getElementById("logoutBtn");
+
+      // Load user from localStorage
+      function loadUser() {
+        try {
+          const raw = localStorage.getItem("syntheth_user");
+          if (!raw) return null;
+          return JSON.parse(raw);
+        } catch {
+          return null;
+        }
+      }
+
+      function saveUser(user) {
+        currentUser = user;
+        localStorage.setItem("syntheth_user", JSON.stringify(user));
+      }
+
+      // Fetch latest user from backend (to sync balance)
+      async function refreshUserFromBackend() {
+        if (!currentUser || !currentUser.wallet) return;
+        try {
+          const res = await fetch(
+            `${API_BASE}/api/user/${currentUser.wallet}`
+          );
+          if (!res.ok) return;
+          const data = await res.json();
+          if (data.user) {
+            saveUser(data.user);
+          }
+        } catch (e) {
+          console.error("Refresh user error", e);
+        }
+        updateUserUI();
+      }
+
+      function updateUserUI() {
+        if (!currentUser) return;
+        navUsername.textContent = currentUser.username || "Unknown";
+        navBalance.textContent = `${currentUser.balance || 0} SETH`;
+        infoWallet.textContent = currentUser.wallet;
+        infoBalance.textContent = `${currentUser.balance || 0} SETH`;
+        modalBalanceText.textContent = `${currentUser.balance || 0} SETH`;
+      }
+
+      // Markets
+      async function loadMarkets() {
+        marketsList.innerHTML =
+          '<p class="text-slate-500 text-sm">Loading markets from Polymarket...</p>';
+        try {
+          const res = await fetch(`${API_BASE}/api/prediction/markets`);
+          const data = await res.json();
+          marketsCache = data.markets || [];
+          renderMarkets();
+        } catch (e) {
+          console.error(e);
+          marketsList.innerHTML =
+            '<p class="text-rose-400 text-sm">Failed to load markets. Check backend.</p>';
+        }
+      }
+
+      function renderMarkets() {
+        if (!marketsCache.length) {
+          marketsList.innerHTML =
+            '<p class="text-slate-500 text-sm">No markets found.</p>';
+          return;
+        }
+
+        marketsList.innerHTML = "";
+        marketsCache.forEach((m) => {
+          const yesProb = Number(m.yesProb || 0);
+          const noProb = Number(m.noProb || 0);
+          const yesPct = (yesProb * 100).toFixed(1);
+          const noPct = (noProb * 100).toFixed(1);
+
+          const div = document.createElement("div");
+          div.className =
+            "border border-slate-700/80 rounded-xl p-3 bg-slate-900/70 hover:bg-slate-900 cursor-pointer transition group";
+          div.innerHTML = `
+            <p class="text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-1">
+              ${m.category || "Market"}
+            </p>
+            <p class="text-xs md:text-sm text-slate-100 mb-2 line-clamp-2">
+              ${m.question}
+            </p>
+            <div class="flex items-center justify-between text-[11px] text-slate-400">
+              <span class="flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                Yes ${yesPct}%
+              </span>
+              <span class="flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                No ${noPct}%
+              </span>
+            </div>
+          `;
+          div.addEventListener("click", () => selectMarket(m));
+          marketsList.appendChild(div);
+        });
+      }
+
+      function probToCoeff(p) {
+        const prob = Math.min(Math.max(p, 0.001), 0.999);
+        return 1 / prob;
+      }
+
+      function selectMarket(market) {
+        selectedMarket = market;
+
+        selectedCategory.textContent =
+          (market.category || "Market").toUpperCase();
+        selectedQuestion.textContent = market.question;
+
+        const yesProb = Number(market.yesProb || 0);
+        const noProb = Number(market.noProb || 0);
+
+        yesProbText.textContent = `${(yesProb * 100).toFixed(1)}%`;
+        noProbText.textContent = `${(noProb * 100).toFixed(1)}%`;
+
+        const yesCoeff = probToCoeff(yesProb);
+        const noCoeff = probToCoeff(noProb > 0 ? 1 - noProb : 0.5);
+
+        yesCoeffText.textContent = `Coeff: ${yesCoeff.toFixed(2)}x`;
+        noCoeffText.textContent = `Coeff: ${noCoeff.toFixed(2)}x`;
+
+        yesBetBtn.disabled = false;
+        noBetBtn.disabled = false;
+
+        yesCard.classList.add("ring-2", "ring-emerald-500/60");
+        noCard.classList.remove("ring-2", "ring-rose-500/60");
+
+        loadMarketHistory(market.id);
+
+        chartSubtitle.textContent =
+          "YES/NO implied prices over time (from Polymarket).";
+      }
+
+      // Chart
+      function initChart() {
+        const ctx = document.getElementById("oddsChart").getContext("2d");
+        oddsChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "YES implied price",
+                data: [],
+                borderWidth: 2,
+                tension: 0.25,
+              },
+              {
+                label: "NO implied price",
+                data: [],
+                borderWidth: 2,
+                tension: 0.25,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                labels: {
+                  color: "#cbd5f5",
+                  font: { size: 11 },
+                },
+              },
+            },
+            scales: {
+              x: {
+                ticks: {
+                  color: "#64748b",
+                  maxRotation: 0,
+                  autoSkip: true,
+                  maxTicksLimit: 6,
+                },
+                grid: { color: "rgba(148,163,184,0.15)" },
+              },
+              y: {
+                ticks: {
+                  color: "#64748b",
+                  callback: (v) => (v * 100).toFixed(0) + "%",
+                },
+                grid: { color: "rgba(148,163,184,0.15)" },
+                min: 0,
+                max: 1,
+              },
+            },
+          },
+        });
+      }
+
+      async function loadMarketHistory(marketId) {
+        if (!oddsChart) return;
+        oddsChart.data.labels = [];
+        oddsChart.data.datasets[0].data = [];
+        oddsChart.data.datasets[1].data = [];
+        oddsChart.update();
+
+        try {
+          const res = await fetch(
+            `${API_BASE}/api/prediction/market-history/${marketId}`
+          );
+          const rows = await res.json();
+          if (!Array.isArray(rows) || !rows.length) {
+            chartSubtitle.textContent =
+              "No history yet for this market. Try another one.";
+            return;
+          }
+
+          const labels = [];
+          const yesData = [];
+          const noData = [];
+          rows.forEach((r) => {
+            const t = new Date(r.created_at);
+            const hh = String(t.getHours()).padStart(2, "0");
+            const mm = String(t.getMinutes()).padStart(2, "0");
+            labels.push(`${hh}:${mm}`);
+            yesData.push(Number(r.yes_liq || 0));
+            noData.push(Number(r.no_liq || 0));
+          });
+
+          oddsChart.data.labels = labels;
+          oddsChart.data.datasets[0].data = yesData;
+          oddsChart.data.datasets[1].data = noData;
+          oddsChart.update();
+        } catch (e) {
+          console.error("history error", e);
+          chartSubtitle.textContent = "Failed to load history.";
+        }
+      }
+
+      // My bets
+      async function loadMyBets() {
+        if (!currentUser || !currentUser.wallet) return;
+        try {
+          const res = await fetch(
+            `${API_BASE}/api/prediction/my-bets/${currentUser.wallet}`
+          );
+          const rows = await res.json();
+          renderMyBets(rows || []);
+        } catch (e) {
+          console.error("my bets error", e);
+        }
+      }
+
+      function renderMyBets(bets) {
+        if (!bets.length) {
+          myBetsList.innerHTML =
+            '<p class="text-slate-500 text-sm">You have no bets yet.</p>';
+          return;
+        }
+
+        myBetsList.innerHTML = "";
+        bets.forEach((b) => {
+          const date = new Date(b.created_at);
+          const d = date.toLocaleDateString();
+          const t = date.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+          const statusColor =
+            b.status === "won"
+              ? "text-emerald-400"
+              : b.status === "lost"
+              ? "text-rose-400"
+              : "text-slate-300";
+
+          const div = document.createElement("div");
+          div.className =
+            "border border-slate-700 rounded-xl p-3 bg-slate-900/60";
+          div.innerHTML = `
+            <p class="text-[11px] text-slate-500 mb-1">${d} ${t}</p>
+            <p class="text-xs text-slate-100 mb-1 line-clamp-2">${b.question}</p>
+            <div class="flex items-center justify-between text-[11px] text-slate-300 mt-1">
+              <span>
+                Side:
+                <span class="${
+                  b.side === "yes" ? "text-emerald-400" : "text-rose-400"
+                } font-semibold">
+                  ${b.side.toUpperCase()}
+                </span>
+              </span>
+              <span>Amount: <span class="text-teal-300">${
+                b.amount
+              } SETH</span></span>
+            </div>
+            <div class="flex items-center justify-between text-[11px] text-slate-300 mt-1">
+              <span>Coeff: ${Number(b.coeff).toFixed(2)}x</span>
+              <span>Potential: <span class="text-emerald-400">${
+                b.potential_win
+              } SETH</span></span>
+            </div>
+            <p class="text-[11px] mt-1 ${statusColor}">Status: ${
+            b.status || "active"
+          }</p>
+          `;
+          myBetsList.appendChild(div);
+        });
+      }
+
+      // Modal logic
+      function openBetModal(side) {
+        if (!selectedMarket || !currentUser) return;
+
+        currentSide = side;
+        const yesCoeff = probToCoeff(Number(selectedMarket.yesProb || 0));
+        const noCoeff = probToCoeff(
+          Number(selectedMarket.noProb || 0) > 0
+            ? 1 - Number(selectedMarket.noProb || 0)
+            : 0.5
+        );
+
+        currentCoeff = side === "yes" ? yesCoeff : noCoeff;
+
+        betSideLabel.textContent =
+          side === "yes" ? "Bet YES" : "Bet NO";
+        betSideText.textContent = side.toUpperCase();
+        betSideText.className =
+          "mt-1 font-semibold " +
+          (side === "yes" ? "text-emerald-300" : "text-rose-300");
+        betCoeffText.textContent = `${currentCoeff.toFixed(2)}x`;
+
+        betQuestion.textContent = selectedMarket.question;
+
+        betAmountInput.value = "";
+        betAmountError.textContent = "";
+        potentialWinText.textContent = "0 SETH";
+        modalBalanceText.textContent = `${currentUser.balance || 0} SETH`;
+
+        betModal.classList.remove("hidden");
+      }
+
+      function closeBetModal() {
+        betModal.classList.add("hidden");
+      }
+
+      function updatePotential() {
+        const amt = Number(betAmountInput.value || 0);
+        if (!amt || amt <= 0) {
+          potentialWinText.textContent = "0 SETH";
+          return;
+        }
+        const win = amt * currentCoeff;
+        potentialWinText.textContent = `${win.toFixed(2)} SETH`;
+      }
+
+      async function confirmBet() {
+        betAmountError.textContent = "";
+        if (!currentUser || !selectedMarket) return;
+
+        const amt = Number(betAmountInput.value || 0);
+        if (!amt || amt <= 0) {
+          betAmountError.textContent = "Enter a valid amount.";
+          return;
+        }
+        if (amt > (currentUser.balance || 0)) {
+          betAmountError.textContent =
+            "Not enough balance for this stake.";
+          return;
+        }
+
+        confirmBetBtn.disabled = true;
+        confirmBetBtn.textContent = "Placing bet...";
+
+        try {
+          const body = {
+            wallet: currentUser.wallet,
+            market_id: selectedMarket.id,
+            question: selectedMarket.question,
+            side: currentSide,
+            amount: amt,
+            coeff: currentCoeff,
+          };
+
+          const res = await fetch(`${API_BASE}/api/prediction/bet`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+
+          const data = await res.json();
+          if (!res.ok || data.error) {
+            betAmountError.textContent =
+              data.error || "Failed to place bet.";
+          } else {
+            // locally update balance
+            currentUser.balance = (currentUser.balance || 0) - amt;
+            saveUser(currentUser);
+            updateUserUI();
+            await loadMyBets();
+            closeBetModal();
+          }
+        } catch (e) {
+          console.error("bet error", e);
+          betAmountError.textContent = "Network error.";
+        }
+
+        confirmBetBtn.disabled = false;
+        confirmBetBtn.textContent = "Confirm Bet";
+      }
+
+      // Events
+      yesBetBtn.addEventListener("click", () => openBetModal("yes"));
+      noBetBtn.addEventListener("click", () => openBetModal("no"));
+      yesCard.addEventListener("click", () => openBetModal("yes"));
+      noCard.addEventListener("click", () => openBetModal("no"));
+
+      betModalClose.addEventListener("click", closeBetModal);
+      betModal.addEventListener("click", (e) => {
+        if (e.target === betModal) closeBetModal();
+      });
+
+      betAmountInput.addEventListener("input", updatePotential);
+      betMaxBtn.addEventListener("click", () => {
+        if (!currentUser) return;
+        betAmountInput.value = currentUser.balance || 0;
+        updatePotential();
+      });
+
+      confirmBetBtn.addEventListener("click", confirmBet);
+
+      refreshMarketsBtn.addEventListener("click", loadMarkets);
+
+      logoutBtn.addEventListener("click", () => {
+        localStorage.removeItem("syntheth_user");
+        window.location.href = "index.html";
+      });
+
+      // Init
+      document.addEventListener("DOMContentLoaded", async () => {
+        const user = loadUser();
+        if (!user || !user.wallet || !user.username) {
+          window.location.href = "index.html";
+          return;
+        }
+        currentUser = user;
+        updateUserUI();
+
+        initChart();
+        await refreshUserFromBackend();
+        await loadMarkets();
+        await loadMyBets();
+      });
+    </script>
+  </body>
+</html>

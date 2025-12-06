@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SynthETH – Duel Mode</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    body { font-family: "Inter", sans-serif; }
+
+    .glass {
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(148,163,184,0.25);
+    }
+
+    /* ==================== ANIMATIONS ==================== */
+
+    @keyframes fadeInUp {
+      0% { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes scaleIn {
+      0% { opacity: 0; transform: scale(0.7); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.4); }
+      80% { opacity: 1; transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+    }
+
+    .fade-up { animation: fadeInUp 0.6s ease forwards; }
+    .scale-in { animation: scaleIn 0.5s ease forwards; }
+    .pop-in { animation: popIn 0.35s ease forwards; }
+    .shake { animation: shake 0.3s ease forwards; }
+
+    .btn-glow:hover {
+      box-shadow: 0 0 18px rgba(45,212,191,0.6);
+      transform: scale(1.03);
+      transition: 0.2s;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+
+  <!-- ================= HEADER ================= -->
+  <header class="flex items-center justify-between p-6">
+    <div class="flex items-center gap-3">
+      <img src="images/synthseth.png" class="w-10 h-10 rounded-full" />
+      <div>
+        <h1 class="text-xl font-bold">SynthETH Duel</h1>
+        <p class="text-xs text-slate-400">Real-time PvP Predictions</p>
+      </div>
+    </div>
+
+    <button onclick="window.location.href='modes.html'" 
+            class="text-slate-400 hover:text-teal-400">
+      ← Back to Modes
+    </button>
+  </header>
+
+  <div class="max-w-3xl mx-auto px-4 py-4">
+
+    <!-- ================= WAITING PANEL ================= -->
+    <section id="waitingPanel" class="glass rounded-2xl p-8 text-center fade-up">
+      <h2 class="text-2xl font-bold mb-4">Searching for opponent…</h2>
+
+      <div class="flex justify-center my-6">
+        <div class="w-20 h-20 rounded-full border-4 border-teal-400 border-t-transparent animate-spin"></div>
+      </div>
+
+      <p class="text-slate-400 text-sm">
+        Stay ready — duel will begin automatically when a rival is found.
+      </p>
+    </section>
+
+    <!-- ================= MATCH PANEL ================= -->
+    <section id="matchPanel" class="glass rounded-2xl p-8 mt-8 hidden fade-up">
+      <div class="text-center mb-6">
+        <h2 class="text-2xl font-bold text-white mb-2">Duel Started</h2>
+        <p id="opponentName" class="text-slate-400">Opponent: …</p>
+      </div>
+
+      <!-- Score Row -->
+      <div class="grid grid-cols-2 gap-4 mb-6 text-center">
+        <div>
+          <p class="text-xs text-slate-400">You</p>
+          <p id="myScore" class="text-4xl font-extrabold text-emerald-400">0</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400">Opponent</p>
+          <p id="opScore" class="text-4xl font-extrabold text-rose-400">0</p>
+        </div>
+      </div>
+
+      <!-- Question -->
+      <div class="mb-4">
+        <p class="text-xs uppercase tracking-widest text-slate-400">Round Question</p>
+        <p id="questionText" class="text-xl font-semibold min-h-[3rem]">
+          Waiting question…
+        </p>
+      </div>
+
+      <!-- Buttons -->
+      <div class="grid grid-cols-2 gap-4 mt-4">
+        <button id="yesBtn"
+                class="py-3 rounded-xl bg-emerald-500 text-slate-900 font-bold hover:bg-emerald-400 transition btn-glow">
+          YES
+        </button>
+
+        <button id="noBtn"
+                class="py-3 rounded-xl bg-rose-500 text-slate-900 font-bold hover:bg-rose-400 transition btn-glow">
+          NO
+        </button>
+      </div>
+
+      <p id="roundStatus" class="text-center text-slate-400 text-sm mt-4 min-h-[1.5rem]">
+        Waiting for question…
+      </p>
+    </section>
+
+    <!-- ================= MATCH RESULT ================= -->
+    <section id="resultPanel" class="glass rounded-2xl p-8 mt-8 hidden fade-up text-center">
+      <h2 id="resultTitle" class="text-3xl font-bold mb-3">Result</h2>
+      <p id="resultText" class="text-slate-300 text-lg mb-6">You won/lost.</p>
+
+      <button onclick="window.location.href='duel.html'"
+              class="bg-teal-500 text-slate-900 font-bold px-8 py-3 rounded-lg hover:bg-teal-400 transition btn-glow">
+        Play Again
+      </button>
+    </section>
+  </div>
+
+
+  <!-- ==================== SCRIPT ==================== -->
+  <script>
+    const API_BASE = "http://localhost:4000";
+    const WS_URL = "ws://localhost:4000";
+
+    let socket = null;
+    let me = null;
+
+    let waitingPanel = document.getElementById("waitingPanel");
+    let matchPanel   = document.getElementById("matchPanel");
+    let resultPanel  = document.getElementById("resultPanel");
+
+    let questionText = document.getElementById("questionText");
+    let roundStatus  = document.getElementById("roundStatus");
+    let opponentName = document.getElementById("opponentName");
+    let myScore      = document.getElementById("myScore");
+    let opScore      = document.getElementById("opScore");
+
+    let yesBtn = document.getElementById("yesBtn");
+    let noBtn  = document.getElementById("noBtn");
+
+    /* ======================================================
+       LOAD USER FROM LOCALSTORAGE
+    ====================================================== */
+    function loadUser() {
+      const raw = localStorage.getItem("syntheth_user");
+      if (!raw) return null;
+      return JSON.parse(raw);
+    }
+
+    me = loadUser();
+    if (!me) window.location.href = "index.html";
+
+    /* ======================================================
+       CONNECT TO SERVER
+    ====================================================== */
+    function startWS() {
+      socket = new WebSocket(WS_URL);
+
+      socket.onopen = () => {
+        socket.send(JSON.stringify({ 
+          type: "join_queue",
+          wallet: me.wallet,
+          username: me.username
+        }));
+      };
+
+      socket.onmessage = (msg) => {
+        const data = JSON.parse(msg.data);
+
+        // Opponent found
+        if (data.type === "duel_start") {
+          waitingPanel.classList.add("hidden");
+          matchPanel.classList.remove("hidden");
+
+          opponentName.textContent = "Opponent: " + data.opponentName;
+        }
+
+        // New question
+        if (data.type === "question") {
+          questionText.textContent = data.question;
+          roundStatus.textContent = "Choose YES or NO";
+          yesBtn.disabled = false;
+          noBtn.disabled = false;
+        }
+
+        // Disable UI and show result of round
+        if (data.type === "round_result") {
+          yesBtn.disabled = true;
+          noBtn.disabled = true;
+
+          roundStatus.textContent = data.message;
+
+          myScore.textContent = data.myScore;
+          opScore.textContent = data.opScore;
+        }
+
+        // Match finished
+        if (data.type === "match_end") {
+          matchPanel.classList.add("hidden");
+          resultPanel.classList.remove("hidden");
+
+          document.getElementById("resultTitle").textContent = data.result === "win" ? "You Win!" : "You Lose";
+          document.getElementById("resultText").textContent  = data.message;
+        }
+      };
+    }
+
+    startWS();
+
+    /* ======================================================
+       SEND ANSWERS
+    ====================================================== */
+    yesBtn.onclick = () => {
+      yesBtn.classList.add("scale-in");
+      socket.send(JSON.stringify({ type: "answer", answer: "yes" }));
+      roundStatus.textContent = "Answer sent…";
+    };
+
+    noBtn.onclick = () => {
+      noBtn.classList.add("scale-in");
+      socket.send(JSON.stringify({ type: "answer", answer: "no" }));
+      roundStatus.textContent = "Answer sent…";
+    };
+  </script>
+</body>
+</html>

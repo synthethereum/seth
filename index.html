@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SynthETH – Prediction Markets Powered by SynthETH</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      href="/images/favicon-96x96.png"
+      sizes="96x96"
+    />
+
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+      .glass-effect {
+        background: rgba(15, 23, 42, 0.9);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+      }
+      .btn-glow:hover {
+        box-shadow: 0 0 18px 0 rgba(45, 212, 191, 0.7);
+      }
+      #whitepaper-content::-webkit-scrollbar {
+        width: 8px;
+      }
+      #whitepaper-content::-webkit-scrollbar-track {
+        background: #020617;
+      }
+      #whitepaper-content::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 4px;
+      }
+      #whitepaper-content::-webkit-scrollbar-thumb:hover {
+        background: #475569;
+      }
+      .hero-fade::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 150px;
+        background: linear-gradient(to bottom, transparent, #020617);
+      }
+      .fade-section {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+      }
+      .fade-section.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    </style>
+  </head>
+  <body class="bg-slate-950 text-slate-100">
+    <!-- ================= NAVBAR ================= -->
+<nav id="navbar" class="fixed top-0 left-0 w-full z-50 transition-all duration-300 bg-transparent">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+
+    <!-- Logo -->
+    <div class="flex items-center gap-3 cursor-pointer" onclick="window.location.href='index.html'">
+      <img src="images/synthseth.png" class="w-8 h-8 rounded-full" />
+      <span class="text-white text-xl font-bold">SynthETH</span>
+    </div>
+
+    <!-- Desktop Menu -->
+    <div class="hidden md:flex items-center gap-10 text-slate-300 font-medium">
+      <a href="#overview" class="hover:text-white transition">About</a>
+      <a href="#utility" class="hover:text-white transition">Features</a>
+      <a href="#tokenomics" class="hover:text-white transition">Tokenomics</a>
+      <a href="#roadmap" class="hover:text-white transition">Roadmap</a>
+      <a href="#faq" class="hover:text-white transition">FAQ</a>
+
+      <a href="#"
+        class="bg-yellow-400 text-slate-900 px-5 py-2 rounded-lg font-semibold hover:bg-yellow-300 transition">
+        Predictions
+      </a>
+    </div>
+
+    <!-- Mobile Burger -->
+    <button id="burgerBtn" class="md:hidden text-white text-3xl">☰</button>
+  </div>
+
+  <!-- Mobile Dropdown Menu -->
+  <div id="mobileMenu" class="md:hidden hidden bg-slate-900/95 backdrop-blur-md border-t border-slate-700 px-6 pb-4 space-y-3">
+    <a href="#overview" class="block text-slate-300 hover:text-white">About</a>
+    <a href="#utility" class="block text-slate-300 hover:text-white">Features</a>
+    <a href="#tokenomics" class="block text-slate-300 hover:text-white">Tokenomics</a>
+    <a href="#roadmap" class="block text-slate-300 hover:text-white">Roadmap</a>
+    <a href="#faq" class="block text-slate-300 hover:text-white">FAQ</a>
+
+    <a href="#"
+      class="block w-full bg-yellow-400 text-slate-900 text-center py-2 rounded-lg font-semibold hover:bg-yellow-300 transition">
+      Get Started
+    </a>
+  </div>
+</nav>
+
+    <!-- Particle Background -->
+    <canvas
+      id="particle-canvas"
+      class="fixed inset-0 w-full h-full -z-10 pointer-events-none"
+    ></canvas>
+
+    <!-- Header & Hero Section -->
+    <header
+      class="relative min-h-screen flex flex-col items-center justify-center text-center p-6 bg-cover bg-center hero-fade"
+      style="
+        background: radial-gradient(ellipse at top, #1e293b 0%, #020617 55%);
+      "
+    >
+      <div class="relative z-10 max-w-4xl mx-auto fade-section">
+        <img
+          src="images/synthseth.png"
+          alt="SynthETH Logo"
+          class="w-16 h-16 mx-auto mb-6 rounded-full shadow-lg"
+        />
+        <h1
+          class="text-5xl md:text-7xl font-extrabold text-white mb-4 tracking-tight"
+        >
+          SynthETH
+        </h1>
+        <p class="text-sm uppercase tracking-[0.25em] text-teal-400 mb-4">
+          Synthetic Outcomes. Real Stakes.
+        </p>
+        <p class="text-lg md:text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
+          SynthETH is a fixed-supply ERC-20 token powering binary prediction
+          markets. Stake YES or NO on real-world and on-chain events, let pooled
+          liquidity set the odds, and receive payouts in SynthETH after outcome
+          settlement.
+        </p>
+
+        <div class="flex flex-wrap justify-center gap-4 mb-8">
+          <a
+            href="TBD"
+            class="bg-teal-500 text-slate-900 font-bold py-3 px-8 rounded-lg text-lg hover:bg-teal-400 transition-all duration-300 btn-glow"
+          >
+            Launch Prediction App (Soon)
+          </a>
+          <button
+            id="open-whitepaper-btn"
+            class="bg-slate-800 text-white font-semibold py-3 px-8 rounded-lg text-lg hover:bg-slate-700 transition-all duration-300"
+          >
+            Read Litepaper
+          </button>
+        </div>
+
+        <!-- Launch Progress -->
+        <div class="mt-8 w-full max-w-xl mx-auto fade-section">
+          <p
+            class="text-center text-slate-400 mb-2 tracking-wide uppercase text-xs"
+          >
+            Platform Launch Progress
+          </p>
+
+          <div
+            class="w-full h-3 bg-slate-800 rounded-full overflow-hidden relative"
+          >
+            <div
+              id="launch-progress-bar"
+              class="h-full bg-gradient-to-r from-teal-400 via-emerald-400 to-teal-300 
+                animate-pulse transition-all duration-500 ease-out"
+              style="width: 0%"
+            ></div>
+          </div>
+
+          <p
+            id="launch-progress-text"
+            class="text-center text-teal-400 mt-2 text-sm font-mono"
+          >
+            0%
+          </p>
+        </div>
+
+        <!-- LOGIN + USERNAME FLOW (вместо блока с контрактом) -->
+        <div
+          id="login-box"
+          class="glass-effect rounded-xl p-6 max-w-2xl mx-auto mt-8 space-y-4"
+        >
+          <p class="text-sm text-slate-400">
+            Enter your Ethereum wallet address to join the SynthETH prediction
+            game.
+          </p>
+
+          <input
+            id="walletInput"
+            type="text"
+            placeholder="0xABC123... your wallet"
+            class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-teal-300 focus:outline-none focus:ring-2 focus:ring-teal-400"
+          />
+
+          <button
+            id="walletLoginBtn"
+            class="w-full bg-teal-500 text-slate-900 font-bold py-3 rounded-lg text-lg hover:bg-teal-400 transition-all duration-300 btn-glow"
+          >
+            Connect
+          </button>
+
+          <p id="loginFeedback" class="text-teal-400 text-sm h-4"></p>
+        </div>
+
+        <div
+          id="username-box"
+          class="glass-effect rounded-xl p-6 max-w-2xl mx-auto mt-8 space-y-4 hidden"
+        >
+          <p class="text-sm text-slate-400">
+            Choose your username. This will be shown on leaderboards and in
+            game.
+          </p>
+
+          <input
+            id="usernameInput"
+            type="text"
+            placeholder="Your username"
+            class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-teal-300 focus:outline-none focus:ring-2 focus:ring-teal-400"
+          />
+
+          <button
+            id="usernameSaveBtn"
+            class="w-full bg-teal-500 text-slate-900 font-bold py-3 rounded-lg text-lg hover:bg-teal-400 transition-all duration-300 btn-glow"
+          >
+            Continue to Game
+          </button>
+
+          <p id="usernameFeedback" class="text-teal-400 text-sm h-4"></p>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-16 -mt-16 relative z-10">
+      <!-- Links Section -->
+      <section id="links" class="text-center mb-24 fade-section">
+        <h2 class="text-3xl font-bold text-white mb-8">
+          Join the SynthETH Ecosystem
+        </h2>
+        <div
+          class="flex flex-wrap justify-center items-center gap-6 text-base md:text-lg"
+        >
+          <a
+            href="https://x.com/synthseth"
+            class="font-medium text-teal-400 hover:text-teal-300 transition"
+            >X (Twitter)</a
+          >
+          <span class="text-slate-700">|</span>
+          <a
+            href="TBD"
+            class="font-medium text-teal-400 hover:text-teal-300 transition"
+            >Telegram</a
+          >
+          <span class="text-slate-700">|</span>
+          <a
+            href="TBD"
+            class="font-medium text-teal-400 hover:text-teal-300 transition"
+            >Etherscan</a
+          >
+          <span class="text-slate-700">|</span>
+          <a
+            href="TBD"
+            class="font-medium text-teal-400 hover:text-teal-300 transition"
+            >DEXTools</a
+          >
+          <span class="text-slate-700">|</span>
+          <a
+            href="TBD"
+            class="font-medium text-teal-400 hover:text-teal-300 transition"
+            >Uniswap</a
+          >
+          <span class="text-slate-700">|</span>
+          <a
+            href="https://github.com/synthethereum/seth"
+            class="font-medium text-teal-400 hover:text-teal-300 transition"
+            >GitHub</a
+          >
+        </div>
+      </section>
+
+      <!-- Project Overview & Narrative -->
+      <section id="overview" class="max-w-4xl mx-auto mb-24 fade-section">
+        <h2 class="text-3xl font-bold text-white text-center mb-12">
+          Project Overview & Narrative
+        </h2>
+        <div class="glass-effect p-8 md:p-10 rounded-2xl space-y-5">
+          <p class="text-lg text-slate-300 leading-relaxed">
+            <span class="text-teal-300 font-semibold">SynthETH</span> is a
+            prediction-market token and protocol built on Ethereum. Users stake
+            SynthETH into YES/NO pools on binary markets – from crypto price
+            targets and sports events to social narratives, elections and
+            on-chain milestones.
+          </p>
+          <p class="text-lg text-slate-300 leading-relaxed">
+            The imbalance between YES and NO liquidity automatically creates
+            real-time odds. After a market is resolved using verifiable data,
+            winning side participants receive payouts in SynthETH, turning every
+            settled event into a redistribution of belief-weighted stakes.
+          </p>
+          <p class="text-lg text-slate-300 leading-relaxed">
+            The name
+            <span class="text-teal-300 font-semibold">SynthETH</span> now stands
+            for
+            <span class="font-semibold"
+              >“Synthetic Outcomes. Real Stakes.”</span
+            >
+            Instead of synthetic price-tracking assets, SynthETH powers
+            synthetic prediction markets – markets constructed entirely from
+            user belief, on-chain liquidity and transparent settlement.
+          </p>
+        </div>
+      </section>
+
+      <!-- Token Utility Section -->
+      <section id="utility" class="max-w-4xl mx-auto mb-24 fade-section">
+        <h2 class="text-3xl font-bold text-white text-center mb-12">
+          Token Utility
+        </h2>
+        <div
+          class="glass-effect p-8 md:p-10 rounded-2xl grid md:grid-cols-2 gap-8 text-sm md:text-base text-slate-300"
+        >
+          <div class="space-y-4">
+            <div>
+              <h3 class="text-lg font-semibold text-teal-300 mb-1">
+                1. Market Participation
+              </h3>
+              <p>
+                Users stake SynthETH into YES or NO pools on any active market.
+                The token is the base currency for all positions across the
+                protocol.
+              </p>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-teal-300 mb-1">
+                2. Settlement Currency
+              </h3>
+              <p>
+                All winning payouts are made in SynthETH, creating recurring
+                on-chain demand whenever markets are resolved and rewards are
+                distributed.
+              </p>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-teal-300 mb-1">
+                3. Fees & Optional Burns
+              </h3>
+              <p>
+                A small portion of protocol fees can be directed to a burn
+                address (if enabled by governance), introducing an optional
+                deflationary component without changing the core token contract.
+              </p>
+            </div>
+          </div>
+          <div class="space-y-4">
+            <div>
+              <h3 class="text-lg font-semibold text-teal-300 mb-1">
+                4. Governance & Parameters
+              </h3>
+              <p>
+                Holders participate in off-chain and on-chain governance to
+                propose and vote on:
+              </p>
+              <ul class="list-disc list-inside mt-2 space-y-1">
+                <li>new market categories and listings</li>
+                <li>oracle providers and dispute rules</li>
+                <li>fee structure and revenue sharing</li>
+                <li>liquidity incentives and reward schedules</li>
+                <li>major protocol upgrades and integrations</li>
+              </ul>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-teal-300 mb-1">
+                5. Ecosystem Alignment
+              </h3>
+              <p>
+                SynthETH is the single asset that connects users, liquidity
+                providers, market creators and governance participants into one
+                aligned prediction ecosystem.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Platform Structure Section -->
+      <section id="platform" class="max-w-4xl mx-auto mb-24 fade-section">
+        <h2 class="text-3xl font-bold text-white text-center mb-12">
+          Platform Structure
+        </h2>
+        <div
+          class="glass-effect p-8 md:p-10 rounded-2xl space-y-10 text-slate-300 text-sm md:text-base"
+        >
+          <div class="grid md:grid-cols-2 gap-8">
+            <div>
+              <h3 class="text-xl font-semibold text-teal-300 mb-3">
+                A. YES/NO Market Engine
+              </h3>
+              <p class="mb-3">
+                Each market consists of two on-chain liquidity pools:
+              </p>
+              <ul class="list-disc list-inside space-y-1 mb-3">
+                <li>
+                  <span class="font-semibold text-teal-300">YES Pool</span>
+                </li>
+                <li>
+                  <span class="font-semibold text-teal-300">NO Pool</span>
+                </li>
+              </ul>
+              <p>Odds are derived directly from liquidity:</p>
+              <p
+                class="mt-2 text-sm bg-slate-900/80 rounded-lg px-3 py-2 inline-block"
+              >
+                <span class="text-teal-300 font-mono"
+                  >Odds(YES) = NO Pool / (YES + NO)</span
+                ><br />
+                <span class="text-teal-300 font-mono"
+                  >Odds(NO) = YES Pool / (YES + NO)</span
+                >
+              </p>
+              <p class="mt-3">
+                The more SynthETH flows into one side, the more attractive the
+                opposing odds become. No orderbook, no off-chain matching
+                engines – only pooled liquidity and a transparent formula.
+              </p>
+            </div>
+            <div>
+              <h3 class="text-xl font-semibold text-teal-300 mb-3">
+                B. Market Types
+              </h3>
+              <p class="mb-3">
+                The protocol is designed for a wide spectrum of binary events,
+                including:
+              </p>
+              <ul class="list-disc list-inside space-y-1">
+                <li>
+                  Crypto price targets (e.g. “Will ETH close above $X on date
+                  Y?”)
+                </li>
+                <li>Sports outcomes and tournament stages</li>
+                <li>Social/media and influencer-driven narratives</li>
+                <li>Election and governance events</li>
+                <li>
+                  On-chain metrics (TVL, volume, liquidity, address counts,
+                  etc.)
+                </li>
+              </ul>
+              <p class="mt-3">
+                Over time, community governance can whitelist new market
+                templates and curated feeds.
+              </p>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-8">
+            <div>
+              <h3 class="text-xl font-semibold text-teal-300 mb-3">
+                C. Settlement Phases
+              </h3>
+              <p class="mb-2">
+                The protocol is intentionally staged to move from trusted to
+                trust-minimized settlement:
+              </p>
+              <ul class="list-disc list-inside space-y-1">
+                <li>
+                  <span class="font-semibold">MVP:</span> admin-driven
+                  settlement using verifiable public sources.
+                </li>
+                <li>
+                  <span class="font-semibold">Beta:</span> multi-signer
+                  settlement with transparent dispute windows.
+                </li>
+                <li>
+                  <span class="font-semibold">Full Protocol:</span> integration
+                  with decentralized oracle providers (e.g. Chainlink, UMA) and
+                  on-chain dispute resolution.
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 class="text-xl font-semibold text-teal-300 mb-3">
+                D. On-Chain Transparency
+              </h3>
+              <p>All core components are on-chain and inspectable:</p>
+              <ul class="list-disc list-inside space-y-1 mt-2">
+                <li>market creation and parameters</li>
+                <li>all YES/NO stakes and liquidity</li>
+                <li>payouts and fee flows</li>
+                <li>resolved outcomes and dispute actions</li>
+              </ul>
+              <p class="mt-3">
+                This makes SynthETH natively compatible with explorers,
+                analytics dashboards, and third-party monitoring tools that can
+                build on top of the data layer.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tokenomics Section -->
+      <section id="tokenomics" class="max-w-4xl mx-auto mb-24 fade-section">
+        <h2 class="text-3xl font-bold text-white text-center mb-12">
+          Tokenomics
+        </h2>
+        <div class="glass-effect p-8 md:p-10 rounded-2xl">
+          <div class="grid md:grid-cols-2 gap-10 text-center">
+            <div>
+              <p class="text-4xl md:text-5xl font-extrabold text-teal-400">
+                30,000,000
+              </p>
+              <p class="text-slate-400 mt-2 text-lg">Total Supply (Fixed)</p>
+            </div>
+            <div>
+              <p class="text-4xl md:text-5xl font-extrabold text-teal-400">
+                Clean ERC-20
+              </p>
+              <p class="text-slate-400 mt-2 text-lg">
+                No Minting • No Rebasing • No Taxes
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-10 border-t border-slate-800 pt-8">
+            <h3 class="text-xl font-semibold text-white mb-4">
+              Supply Breakdown
+            </h3>
+            <div class="grid md:grid-cols-3 gap-6 text-sm md:text-base">
+              <div class="bg-slate-900/70 rounded-xl p-4">
+                <p class="font-semibold text-teal-300 mb-1">Permanent Lock</p>
+                <p class="text-2xl font-bold">20,000,000</p>
+                <p class="text-slate-400 mt-1">
+                  Locked indefinitely to remove emission risk and reinforce the
+                  fixed-supply narrative.
+                </p>
+              </div>
+              <div class="bg-slate-900/70 rounded-xl p-4">
+                <p class="font-semibold text-teal-300 mb-1">
+                  Community Airdrop
+                </p>
+                <p class="text-2xl font-bold">5,000,000</p>
+                <p class="text-slate-400 mt-1">
+                  Reserved for early users, prediction-market participants and
+                  ecosystem campaigns via transparent on-chain distributions.
+                </p>
+              </div>
+              <div class="bg-slate-900/70 rounded-xl p-4">
+                <p class="font-semibold text-teal-300 mb-1">Ecosystem & Ops</p>
+                <p class="text-2xl font-bold">5,000,000</p>
+                <p class="text-slate-400 mt-1">
+                  Liquidity seeding, integrations, infra, audits, oracle costs
+                  and long-term protocol development.
+                </p>
+              </div>
+            </div>
+
+            <p class="mt-6 text-sm text-slate-400">
+              Circulating supply is defined as
+              <strong class="text-teal-300"
+                >circulating = total supply − permanently locked supply</strong
+              >. At genesis this equals
+              <strong class="text-teal-300">10,000,000 SynthETH</strong>. The
+              airdrop allocation remains unchanged and will be distributed in
+              stages as the prediction platform evolves.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Why SynthETH Section -->
+      <section class="max-w-4xl mx-auto mb-24 fade-section">
+        <h2 class="text-3xl font-bold text-white text-center mb-12">
+          Why SynthETH?
+        </h2>
+        <div
+          class="glass-effect p-8 md:p-10 rounded-2xl grid md:grid-cols-2 gap-8"
+        >
+          <div class="space-y-3 text-slate-300 text-sm md:text-base">
+            <p>
+              <span class="text-teal-400 font-semibold"
+                >&bull; Clean risk surface:</span
+              >
+              no rebasing, no transfer taxes, no hidden mint or blacklist
+              functions.
+            </p>
+            <p>
+              <span class="text-teal-400 font-semibold"
+                >&bull; Prediction-native:</span
+              >
+              token design, distribution and roadmap are all aligned around
+              prediction markets.
+            </p>
+            <p>
+              <span class="text-teal-400 font-semibold"
+                >&bull; Composable:</span
+              >
+              strict ERC-20 behavior makes SynthETH easy to integrate into
+              DEXes, dashboards and DeFi legos.
+            </p>
+          </div>
+          <div class="space-y-3 text-slate-300 text-sm md:text-base">
+            <p>
+              <span class="text-teal-400 font-semibold"
+                >&bull; Transparent economics:</span
+              >
+              fixed 30M supply, clear lockups and public tracking of incentives.
+            </p>
+            <p>
+              <span class="text-teal-400 font-semibold"
+                >&bull; Engagement flywheel:</span
+              >
+              recurring market creation, staking and settlement generate
+              continuous on-chain activity.
+            </p>
+            <p>
+              <span class="text-teal-400 font-semibold"
+                >&bull; Governance with guardrails:</span
+              >
+              governance steers markets, fees and incentives, while the core
+              token contract remains immutable.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Roadmap Section -->
+      <section id="roadmap" class="max-w-4xl mx-auto mb-24 fade-section">
+        <h2 class="text-3xl font-bold text-white text-center mb-12">Roadmap</h2>
+
+        <div class="relative pl-6 md:pl-10">
+          <div
+            class="absolute left-3 md:left-4 top-0 bottom-0 w-px bg-teal-500/40"
+          ></div>
+
+          <!-- Phase 1 — MVP -->
+          <div class="relative mb-8">
+            <div
+              class="absolute -left-1 md:-left-1.5 top-3 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center ring-4 ring-slate-950"
+            >
+              <svg
+                class="w-3 h-3 text-slate-950"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-7.25 7.25a1 1 0 01-1.414 0l-3.25-3.25a1 1 0 111.414-1.414L8.5 11.086l6.543-6.543a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </div>
+
+            <div class="ml-6 md:ml-10 glass-effect rounded-2xl p-6 md:p-7">
+              <p
+                class="text-xs font-semibold text-emerald-400 uppercase tracking-wide mb-1"
+              >
+                Phase 1 • MVP
+              </p>
+              <h3 class="text-xl md:text-2xl font-bold text-white mb-3">
+                Core Prediction Engine
+              </h3>
+              <ul
+                class="list-disc list-inside text-slate-300 space-y-1 text-sm md:text-base"
+              >
+                <li>
+                  Launch of mainnet SynthETH token (fixed 30M supply, clean
+                  ERC-20)
+                </li>
+                <li>YES/NO market contracts with pooled liquidity model</li>
+                <li>Wallet integration and basic web UI</li>
+                <li>
+                  Admin-driven market settlement using verifiable public data
+                </li>
+                <li>
+                  Initial curated markets (crypto, on-chain, selected events)
+                </li>
+                <li>
+                  Tracking of early users for airdrop eligibility and rewards
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Phase 2 — Public Beta -->
+          <div class="relative mb-8">
+            <div
+              class="absolute -left-1 md:-left-1.5 top-3 w-6 h-6 rounded-full bg-slate-800 ring-4 ring-slate-950"
+            ></div>
+            <div class="ml-6 md:ml-10 glass-effect rounded-2xl p-6 md:p-7">
+              <p
+                class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1"
+              >
+                Phase 2 • Public Beta
+              </p>
+              <h3 class="text-xl md:text-2xl font-bold text-white mb-3">
+                User-Generated Markets & Social Layer
+              </h3>
+              <ul
+                class="list-disc list-inside text-slate-300 space-y-1 text-sm md:text-base"
+              >
+                <li>User-generated markets with permissioned templates</li>
+                <li>
+                  Reputation points for consistent and accurate participation
+                </li>
+                <li>
+                  Leaderboards for traders, market creators and liquidity
+                  providers
+                </li>
+                <li>
+                  Fee-sharing and reward programs funded from protocol revenue
+                </li>
+                <li>
+                  Social sharing and referral mechanics for prediction markets
+                </li>
+                <li>
+                  Progressive rollout of the 5M SynthETH community airdrop
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Phase 3 — Oracle + Full Protocol -->
+          <div class="relative mb-8">
+            <div
+              class="absolute -left-1 md:-left-1.5 top-3 w-6 h-6 rounded-full bg-slate-800 ring-4 ring-slate-950"
+            ></div>
+            <div class="ml-6 md:ml-10 glass-effect rounded-2xl p-6 md:p-7">
+              <p
+                class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1"
+              >
+                Phase 3 • Oracle + Full Protocol
+              </p>
+              <h3 class="text-xl md:text-2xl font-bold text-white mb-3">
+                Decentralized Settlement & Liquidity Incentives
+              </h3>
+              <ul
+                class="list-disc list-inside text-slate-300 space-y-1 text-sm md:text-base"
+              >
+                <li>
+                  Integration with decentralized oracles (e.g. Chainlink, UMA)
+                  for trust-minimized market resolution
+                </li>
+                <li>
+                  On-chain dispute mechanisms with staking and challenge periods
+                </li>
+                <li>
+                  Liquidity mining and targeted incentives for key market
+                  categories
+                </li>
+                <li>Advanced market types and multi-stage event structures</li>
+                <li>
+                  Cross-chain extensions and L2 deployments for cheaper
+                  participation
+                </li>
+                <li>
+                  DAO-style governance for parameters, fees and new integrations
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 border-t border-slate-800">
+      <div
+        class="container mx-auto px-6 py-8 text-center text-slate-500 text-sm"
+      >
+        <p>&copy; 2025 SynthETH. All Rights Reserved.</p>
+        <div class="flex justify-center gap-6 mt-4">
+          <a href="https://x.com/synthseth" class="hover:text-teal-400"
+            >X (Twitter)</a
+          >
+          <a href="TBD" class="hover:text-teal-400">Telegram</a>
+          <a href="TBD" class="hover:text-teal-400">Etherscan</a>
+          <a href="mailto:team@syntheth.com" class="hover:text-teal-400">
+            team@syntheth.com
+          </a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Litepaper Modal -->
+    <div
+      id="whitepaper-modal"
+      class="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50"
+    >
+      <div
+        class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-3xl w-full flex flex-col max-h-[90vh]"
+      >
+        <div
+          class="flex justify-between items-center p-6 border-b border-slate-800 flex-shrink-0"
+        >
+          <h2 class="text-2xl font-bold text-white">
+            SynthETH – Prediction Markets Litepaper v1.0
+          </h2>
+          <button
+            id="close-whitepaper-btn"
+            class="text-slate-400 hover:text-white transition"
+          >
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div
+          id="whitepaper-content"
+          class="p-8 text-slate-300 leading-relaxed text-left overflow-y-auto space-y-8 text-sm md:text-base"
+        >
+          <section>
+            <h3 class="text-xl font-semibold text-white mb-2">1. Abstract</h3>
+            <p>
+              <span class="text-teal-300 font-semibold">SynthETH</span> is a
+              fixed-supply ERC-20 token (30,000,000 units) that powers a binary
+              prediction-market protocol on Ethereum. Users stake SynthETH into
+              YES/NO pools on real-world and on-chain events, with odds
+              determined by liquidity and payouts settled in SynthETH after
+              outcomes are verified.
+            </p>
+          </section>
+
+          <section>
+            <h3 class="text-xl font-semibold text-white mb-2">
+              2. Narrative & Vision
+            </h3>
+            <p class="mb-2">
+              Under the banner
+              <span class="text-teal-300 font-semibold"
+                >“Synthetic Outcomes. Real Stakes.”</span
+              >, SynthETH repurposes the idea of “synthetics” from
+              price-mirroring assets to <strong>synthetic markets</strong> —
+              markets where every event becomes a tradable binary asset
+              constructed from user belief and on-chain liquidity.
+            </p>
+            <p>
+              The vision is to create a composable, transparent and
+              high-engagement prediction layer for Ethereum, where anyone can
+              express a view on future states of the world, and where those
+              views are priced, traded and settled in a single, clean ERC-20
+              asset.
+            </p>
+          </section>
+
+          <section>
+            <h3 class="text-xl font-semibold text-white mb-2">
+              3. Core Design
+            </h3>
+            <ul class="list-disc list-inside space-y-1">
+              <li>
+                <strong>Binary markets:</strong> each market has YES and NO
+                pools.
+              </li>
+              <li>
+                <strong>Liquidity-defined odds:</strong> odds are a simple
+                function of opposite-side liquidity.
+              </li>
+              <li>
+                <strong>On-chain state:</strong> stakes, outcomes and payouts
+                are transparent and verifiable.
+              </li>
+              <li>
+                <strong>Single settlement asset:</strong> all positions and
+                rewards use SynthETH.
+              </li>
+            </ul>
+            <p class="mt-2">
+              This design keeps the protocol simple enough for early-stage
+              experimentation, while being flexible enough to support advanced
+              oracle and governance structures later on.
+            </p>
+          </section>
+
+          <section>
+            <h3 class="text-xl font-semibold text-white mb-2">
+              4. Token Specification
+            </h3>
+            <ul class="space-y-1">
+              <li><strong>Name:</strong> SynthETH</li>
+              <li><strong>Standard:</strong> ERC-20</li>
+              <li><strong>Network:</strong> Ethereum Mainnet</li>
+              <li><strong>Decimals:</strong> 18</li>
+              <li>
+                <strong>Total Supply:</strong> 30,000,000 SynthETH (fixed)
+              </li>
+              <li><strong>Minting:</strong> none after deployment</li>
+              <li>
+                <strong>Tax / Rebasing:</strong> none – clean transfer semantics
+              </li>
+            </ul>
+          </section>
+
+          <section>
+            <h3 class="text-xl font-semibold text-white mb-2">
+              5. Token Utility
+            </h3>
+            <p class="mb-2">
+              SynthETH is the native asset of the prediction protocol:
+            </p>
+            <ul class="list-disc list-inside space-y-1">
+              <li>
+                <strong>Staking asset:</strong> users stake SynthETH for YES/NO
+                positions.
+              </li>
+              <li>
+                <strong>Settlement unit:</strong> winners are paid in SynthETH
+                after markets resolve.
+              </li>
+              <li>
+                <strong>Fee unit:</strong> protocol fees are denominated and
+                collected in SynthETH.
+              </li>
+              <li>
+                <strong>Governance:</strong> holders participate in governance
+                over markets, parameters and incentives.
+              </li>
+            </ul>
+          </section>
+
+          <section>
+            <h3 class="text-xl font-semibold text-white mb-2">
+              6. Tokenomics & Distribution
+            </h3>
+            <p class="mb-2">Total supply is allocated as follows:</p>
+            <ul class="list-disc list-inside space-y-1">
+              <li>
+                <strong>20,000,000 SynthETH – Permanent Lock</strong>: locked
+                indefinitely to remove emission risk and support the
+                fixed-supply narrative.
+              </li>
+              <li>
+                <strong>5,000,000 SynthETH – Community Airdrop</strong>: rewards
+                for early users, market creators and active participants across
+                multiple campaign waves.
+              </li>
+              <li>
+                <strong>5,000,000 SynthETH – Ecosystem & Operations</strong>:
+                liquidity provision, protocol development, audits, oracle costs
+                and strategic partnerships.
+              </li>
+            </ul>
+            <p class="mt-2 text-sm text-slate-400">
+              Circulating supply is defined as
+              <span class="text-teal-300"
+                >total supply minus permanently locked supply</span
+              >
+              and is initially 10,000,000 SynthETH.
+            </p>
+          </section>
+
+          <section>
+            <h3 class="text-xl font-semibold text-white mb-2">
+              7. Settlement & Oracles
+            </h3>
+            <p class="mb-2">
+              To balance speed and trust minimization, settlement is rolled out
+              in stages:
+            </p>
+            <ul class="list-disc list-inside space-y-1">
+              <li>
+                <strong>MVP:</strong> admin-driven settlement using public,
+                archivable sources.
+              </li>
+              <li>
+                <strong>Beta:</strong> multisig settlement with transparent
+                dispute windows and community oversight.
+              </li>
+              <li>
+                <strong>Full protocol:</strong> integration of decentralized
+                oracle frameworks and on-chain dispute resolution mechanisms.
+              </li>
+            </ul>
+            <p class="mt-2">
+              The long-term goal is to minimize trust in any single entity and
+              rely instead on economically-secured oracle systems and open
+              challenges.
+            </p>
+          </section>
+
+          <section>
+            <h3 class="text-xl font-semibold text-white mb-2">
+              8. Roadmap (High-Level)
+            </h3>
+            <ul class="list-disc list-inside space-y-1">
+              <li>
+                <strong>Phase 1 – MVP:</strong> token launch, core YES/NO
+                markets, curated events, basic UI and wallet support.
+              </li>
+              <li>
+                <strong>Phase 2 – Public Beta:</strong> user-generated markets,
+                reputation, leaderboards, fee-sharing and community campaigns.
+              </li>
+              <li>
+                <strong>Phase 3 – Oracle + Full Protocol:</strong> decentralized
+                settlement, advanced markets, liquidity incentives and
+                cross-chain deployment.
+              </li>
+            </ul>
+          </section>
+
+          <section>
+            <h3 class="text-xl font-semibold text-white mb-2">
+              9. Risks & Disclaimer
+            </h3>
+            <p class="text-sm text-slate-400 italic">
+              Prediction markets involve financial risk, regulatory uncertainty
+              and potential oracle failures. SynthETH does not represent equity,
+              debt or a claim on any entity and does not guarantee returns. This
+              document is for informational purposes only and does not
+              constitute financial, legal or tax advice. Participants should
+              perform their own due diligence and comply with laws applicable in
+              their jurisdiction.
+            </p>
+          </section>
+        </div>
+      </div>
+    </div>
+      </div>
+    </div>
+
+    <script>
+      // ============ PARTICLE BACKGROUND ============
+      const canvas = document.getElementById('particle-canvas');
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      const particleCount = 70;
+      const maxVelocity = 0.3;
+      const connectionDistance = 140;
+
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      class Particle {
+        constructor() {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.vx = Math.random() * maxVelocity - maxVelocity / 2;
+          this.vy = Math.random() * maxVelocity - maxVelocity / 2;
+          this.size = Math.random() * 2 + 1;
+        }
+        move() {
+          if (this.x <= 0 || this.x >= canvas.width) this.vx *= -1;
+          if (this.y <= 0 || this.y >= canvas.height) this.vy *= -1;
+          this.x += this.vx;
+          this.y += this.vy;
+        }
+        draw() {
+          ctx.beginPath();
+          ctx.fillStyle = 'rgba(45, 212, 191, 0.55)';
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      function initParticles() {
+        particles = [];
+        for (let i = 0; i < particleCount; i++) {
+          particles.push(new Particle());
+        }
+      }
+      initParticles();
+
+      function drawLines() {
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < connectionDistance) {
+              ctx.strokeStyle = `rgba(45, 212, 191, ${
+                1 - dist / connectionDistance
+              })`;
+              ctx.lineWidth = 0.6;
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.stroke();
+            }
+          }
+        }
+      }
+
+      function animateParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach((p) => {
+          p.move();
+          p.draw();
+        });
+        drawLines();
+        requestAnimationFrame(animateParticles);
+      }
+      animateParticles();
+
+      // ============ LITEPAPER MODAL ============
+      const openBtn = document.getElementById('open-whitepaper-btn');
+      const closeBtn = document.getElementById('close-whitepaper-btn');
+      const modal = document.getElementById('whitepaper-modal');
+
+      openBtn.addEventListener('click', () => {
+        modal.classList.remove('hidden');
+      });
+
+      closeBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+      });
+
+      modal.addEventListener('click', (event) => {
+        if (event.target === modal) {
+          modal.classList.add('hidden');
+        }
+      });
+
+      // ============ FADE-IN SECTIONS ============
+      const fadeSections = document.querySelectorAll('.fade-section');
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.15 }
+      );
+      fadeSections.forEach((section) => observer.observe(section));
+
+      // ============ LAUNCH PROGRESS BAR ============
+      let progress = 0;
+      const bar = document.getElementById('launch-progress-bar');
+      const text = document.getElementById('launch-progress-text');
+      const MAX_PROGRESS = 87;
+      const SPEED = 80;
+
+      function updateProgress() {
+        if (progress < MAX_PROGRESS) {
+          progress += 1;
+          bar.style.width = progress + '%';
+          text.innerText = progress + '%';
+          requestAnimationFrame(() => {
+            setTimeout(updateProgress, SPEED);
+          });
+        } else {
+          bar.classList.add('animate-pulse');
+        }
+      }
+      updateProgress();
+
+      // ============ AUTH & USERNAME FLOW ============
+      const API_BASE = 'http://localhost:4000';
+
+      const loginBox = document.getElementById('login-box');
+      const usernameBox = document.getElementById('username-box');
+      const walletInput = document.getElementById('walletInput');
+      const walletLoginBtn = document.getElementById('walletLoginBtn');
+      const loginFeedback = document.getElementById('loginFeedback');
+      const usernameInput = document.getElementById('usernameInput');
+      const usernameSaveBtn = document.getElementById('usernameSaveBtn');
+      const usernameFeedback = document.getElementById('usernameFeedback');
+
+      let currentUser = null;
+
+      function saveUser(user) {
+        currentUser = user;
+        localStorage.setItem('syntheth_user', JSON.stringify(user));
+      }
+
+      function loadUser() {
+        try {
+          const raw = localStorage.getItem('syntheth_user');
+          if (!raw) return null;
+          currentUser = JSON.parse(raw);
+          return currentUser;
+        } catch (e) {
+          console.error('Failed to parse user from storage:', e);
+          return null;
+        }
+      }
+
+      function redirectToGame() {
+        window.location.href = "mode.html";
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const user = loadUser();
+        if (user && user.username) {
+          redirectToGame();
+        }
+      });
+
+      walletLoginBtn.addEventListener('click', async () => {
+        loginFeedback.innerText = '';
+        const wallet = (walletInput.value || '').trim();
+
+        if (!wallet || !wallet.startsWith('0x') || wallet.length < 10) {
+          loginFeedback.innerText = 'Please enter a valid wallet address.';
+          return;
+        }
+
+        try {
+          const res = await fetch(`${API_BASE}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ wallet }),
+          });
+
+          const data = await res.json();
+
+          if (!res.ok || data.error) {
+            loginFeedback.innerText = data.error || 'Login failed.';
+            return;
+          }
+
+          saveUser(data.user);
+          loginFeedback.innerText = 'Wallet connected. Set your username.';
+          loginBox.classList.add('hidden');
+          usernameBox.classList.remove('hidden');
+        } catch (e) {
+          console.error(e);
+          loginFeedback.innerText = 'Network error. Please try again.';
+        }
+      });
+
+      usernameSaveBtn.addEventListener('click', async () => {
+        usernameFeedback.innerText = '';
+        const username = (usernameInput.value || '').trim();
+
+        if (!currentUser || !currentUser.wallet) {
+          usernameFeedback.innerText = 'No wallet session. Please reconnect.';
+          loginBox.classList.remove('hidden');
+          usernameBox.classList.add('hidden');
+          return;
+        }
+
+        if (!username || username.length < 3) {
+          usernameFeedback.innerText =
+            'Username must be at least 3 characters long.';
+          return;
+        }
+
+        try {
+          const res = await fetch(`${API_BASE}/api/set-username`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              wallet: currentUser.wallet,
+              username,
+            }),
+          });
+
+          const data = await res.json();
+
+          if (!res.ok || data.error) {
+            usernameFeedback.innerText = data.error || 'Failed to save name.';
+            return;
+          }
+
+          saveUser(data.user);
+          usernameFeedback.innerText = 'Username saved. Redirecting to game...';
+
+          setTimeout(() => {
+            redirectToGame();
+          }, 800);
+        } catch (e) {
+          console.error(e);
+          usernameFeedback.innerText = 'Network error. Please try again.';
+        }
+      });
+      /* ================= NAVBAR LOGIC ================= */
+
+const navbar = document.getElementById("navbar");
+const burgerBtn = document.getElementById("burgerBtn");
+const mobileMenu = document.getElementById("mobileMenu");
+
+// Sticky background on scroll
+window.addEventListener("scroll", () => {
+  if (window.scrollY > 20) {
+    navbar.classList.add("bg-slate-900/80", "backdrop-blur-md");
+  } else {
+    navbar.classList.remove("bg-slate-900/80", "backdrop-blur-md");
+  }
+});
+
+// Mobile burger toggle
+burgerBtn.addEventListener("click", () => {
+  mobileMenu.classList.toggle("hidden");
+});
+
+    </script>
+  </body>
+</html>
