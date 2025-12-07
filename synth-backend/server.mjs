@@ -20,7 +20,7 @@ app.use(cors());
 const db = new Database("./database.sqlite");
 console.log("SQLite loaded");
 
-// Main users table
+// main users table (без avatar, он добавится ALTER-ом ниже)
 db.prepare(`
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -33,12 +33,12 @@ CREATE TABLE IF NOT EXISTS users (
 )
 `).run();
 
-// ADD avatar column if missing
+// добавляем avatar, если его нет
 try {
-  db.prepare("ALTER TABLE users ADD COLUMN avatar TEXT").run();
-  console.log("Added avatar column");
+  db.prepare(`ALTER TABLE users ADD COLUMN avatar TEXT`).run();
+  console.log("Added column: avatar");
 } catch (e) {
-  // Column exists — nothing to do
+  // колонка уже существует
 }
 
 // Bets table
@@ -67,14 +67,6 @@ CREATE TABLE IF NOT EXISTS price_history (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 )
 `).run();
-// Ensure avatar column exists
-try {
-  db.prepare(`ALTER TABLE users ADD COLUMN avatar TEXT`).run();
-  console.log("Added column: avatar");
-} catch (e) {
-  console.log("Avatar column already exists");
-}
-
 
 // ----------------------------
 // IDENTICON AVATAR GENERATOR
@@ -97,7 +89,7 @@ function generateAvatar(wallet) {
     <rect width="5" height="5" fill="${bg}"/>
   `;
 
-  blocks.forEach(b => {
+  blocks.forEach((b) => {
     const x = b.i % 5;
     const y = Math.floor(b.i / 5);
     svg += `<rect x="${x}" y="${y}" width="1" height="1" fill="${b.color}" />`;
@@ -108,13 +100,34 @@ function generateAvatar(wallet) {
   return "data:image/svg+xml;base64," + Buffer.from(svg).toString("base64");
 }
 
+// автопочинка старых юзеров без аватаров
+try {
+  const needAvatar = db
+    .prepare("SELECT wallet FROM users WHERE avatar IS NULL OR avatar = ''")
+    .all();
+
+  for (const u of needAvatar) {
+    const avatar = generateAvatar(u.wallet);
+    db.prepare("UPDATE users SET avatar = ? WHERE wallet = ?").run(
+      avatar,
+      u.wallet
+    );
+  }
+  if (needAvatar.length) {
+    console.log(`Backfilled avatars for ${needAvatar.length} users`);
+  }
+} catch (e) {
+  console.error("Avatar backfill error:", e);
+}
 
 // ----------------------------
 // CRON – PRICE HISTORY
 // ----------------------------
 async function updatePrices() {
   try {
-    const r = await fetch("https://gamma-api.polymarket.com/markets?limit=200&active=true");
+    const r = await fetch(
+      "https://gamma-api.polymarket.com/markets?limit=200&active=true"
+    );
     const data = await r.json();
 
     const insert = db.prepare(`
@@ -151,7 +164,6 @@ async function updatePrices() {
 cron.schedule("*/1 * * * *", updatePrices);
 updatePrices();
 
-
 // ----------------------------
 // LOGIN
 // ----------------------------
@@ -162,17 +174,29 @@ app.post("/api/login", (req, res) => {
 
   let user = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
 
+  // новый пользователь
   if (!user) {
     const avatar = generateAvatar(wallet);
 
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO users (wallet, balance, avatar)
       VALUES (?, 1000, ?)
-    `).run(wallet, avatar);
+    `
+    ).run(wallet, avatar);
 
     user = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
-
     return res.json({ user, created: true });
+  }
+
+  // старый пользователь, но avatar пустой – дорисуем
+  if (!user.avatar) {
+    const avatar = generateAvatar(wallet);
+    db.prepare("UPDATE users SET avatar = ? WHERE wallet = ?").run(
+      avatar,
+      wallet
+    );
+    user.avatar = avatar;
   }
 
   res.json({ user, created: false });
@@ -187,14 +211,16 @@ app.post("/api/set-username", (req, res) => {
   if (!wallet || !username)
     return res.status(400).json({ error: "Wallet + username required" });
 
-  const taken = db.prepare(
-    "SELECT * FROM users WHERE username = ? AND wallet != ?"
-  ).get(username, wallet);
+  const taken = db
+    .prepare("SELECT * FROM users WHERE username = ? AND wallet != ?")
+    .get(username, wallet);
 
   if (taken) return res.status(400).json({ error: "Username already taken" });
 
-  db.prepare("UPDATE users SET username = ? WHERE wallet = ?")
-    .run(username, wallet);
+  db.prepare("UPDATE users SET username = ? WHERE wallet = ?").run(
+    username,
+    wallet
+  );
 
   const updated = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
   res.json({ status: "ok", user: updated });
@@ -206,27 +232,70 @@ app.post("/api/set-username", (req, res) => {
 app.get("/api/leaderboard", (req, res) => {
   const type = req.query.type === "duel" ? "duel_score" : "score";
 
-  const rows = db.prepare(`
+  const rows = db
+    .prepare(
+      `
     SELECT username, wallet, ${type} AS score, avatar
     FROM users
     ORDER BY ${type} DESC
     LIMIT 50
-  `).all();
+  `
+    )
+    .all();
 
   res.json({ leaderboard: rows });
 });
 
 // ----------------------------
-// RANDOM MARKET API
+// MARKETS LIST (для игры / списков)
 // ----------------------------
-const GAMMA_URL = "https://gamma-api.polymarket.com/markets?limit=800&active=true";
+app.get("/api/prediction/markets", async (req, res) => {
+  try {
+    const r = await fetch(
+      "https://gamma-api.polymarket.com/markets?limit=500&active=true"
+    );
+    const data = await r.json();
+
+    const markets = data
+      .filter(
+        (m) => m.outcomes?.includes("Yes") && m.outcomes.includes("No")
+      )
+      .map((m) => {
+        const prices = Array.isArray(m.outcomePrices)
+          ? m.outcomePrices
+          : JSON.parse(m.outcomePrices);
+
+        return {
+          id: m.id,
+          question:
+            m.question ||
+            m.title ||
+            (m.slug ? m.slug.replace(/-/g, " ") : "Unknown question"),
+          yesProb: Number(prices[0]),
+          noProb: Number(prices[1]),
+          category: m.category,
+        };
+      });
+
+    res.json({ markets });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Failed to load markets" });
+  }
+});
+
+// ----------------------------
+// RANDOM MARKET API (для одиночного вопроса)
+// ----------------------------
+const GAMMA_URL =
+  "https://gamma-api.polymarket.com/markets?limit=800&active=true";
 
 async function getRandomYesNoMarket() {
   const r = await fetch(GAMMA_URL);
   const data = await r.json();
 
-  const valid = data.filter(m =>
-    m.outcomes?.includes("Yes") && m.outcomes.includes("No")
+  const valid = data.filter(
+    (m) => m.outcomes?.includes("Yes") && m.outcomes.includes("No")
   );
 
   if (!valid.length) {
@@ -234,7 +303,7 @@ async function getRandomYesNoMarket() {
       id: "fallback",
       question: "Will ETH be above $1,000 tomorrow?",
       yesProb: 0.5,
-      noProb: 0.5
+      noProb: 0.5,
     };
   }
 
@@ -252,7 +321,7 @@ async function getRandomYesNoMarket() {
     id: m.id,
     question: m.question || m.title || "Unknown question",
     yesProb: Number(prices[yesIdx]),
-    noProb: Number(prices[noIdx])
+    noProb: Number(prices[noIdx]),
   };
 }
 
@@ -260,6 +329,7 @@ app.get("/api/polymarket-question", async (req, res) => {
   try {
     res.json(await getRandomYesNoMarket());
   } catch (e) {
+    console.error(e);
     res.status(500).json({ error: "Failed" });
   }
 });
@@ -292,7 +362,7 @@ function createDuel(p1, p2) {
     answered: [null, null],
     scores: [0, 0],
     currentRound: 0,
-    timer: null
+    timer: null,
   };
 
   duels.set(duelId, duel);
@@ -308,9 +378,9 @@ function createDuel(p1, p2) {
       type: "match_found",
       opponent: {
         wallet: duel.wallets[1 - i],
-        username: duel.usernames[1 - i]
+        username: duel.usernames[1 - i],
       },
-      totalRounds: ROUNDS_TOTAL
+      totalRounds: ROUNDS_TOTAL,
     })
   );
 
@@ -331,13 +401,13 @@ async function startRound(duel) {
       id: "fallback",
       question: "Will Bitcoin go up tomorrow?",
       yesProb: 0.5,
-      noProb: 0.5
+      noProb: 0.5,
     };
   }
 
   duel.correctAnswer = q.yesProb >= q.noProb ? "yes" : "no";
 
-  duel.sockets.forEach(ws =>
+  duel.sockets.forEach((ws) =>
     safeSend(ws, {
       type: "round_start",
       round: duel.currentRound,
@@ -345,9 +415,9 @@ async function startRound(duel) {
       question: {
         text: q.question,
         yesProb: q.yesProb,
-        noProb: q.noProb
+        noProb: q.noProb,
       },
-      roundTime: ROUND_TIME_MS / 1000
+      roundTime: ROUND_TIME_MS / 1000,
     })
   );
 
@@ -373,7 +443,7 @@ function endRound(duel) {
       correctAnswer: correct,
       yourAnswer: duel.answered[i],
       yourScore: duel.scores[i],
-      opponentScore: duel.scores[1 - i]
+      opponentScore: duel.scores[1 - i],
     })
   );
 
@@ -395,7 +465,7 @@ function finishDuel(duel) {
       type: "duel_finished",
       yourScore: duel.scores[i],
       opponentScore: duel.scores[1 - i],
-      winner
+      winner,
     })
   );
 
@@ -403,17 +473,20 @@ function finishDuel(duel) {
   duels.delete(duel.id);
 }
 
-
-wss.on("connection", ws => {
-  ws.on("message", raw => {
+wss.on("connection", (ws) => {
+  ws.on("message", (raw) => {
     let msg;
-    try { msg = JSON.parse(raw); } catch { return; }
+    try {
+      msg = JSON.parse(raw);
+    } catch {
+      return;
+    }
 
     if (msg.type === "init") {
       waitingPlayers.push({
         ws,
         wallet: msg.wallet,
-        username: msg.username
+        username: msg.username,
       });
 
       safeSend(ws, { type: "waiting" });
