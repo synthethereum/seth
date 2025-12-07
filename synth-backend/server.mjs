@@ -5,6 +5,7 @@ import cron from "node-cron";
 import fetch from "node-fetch";
 import http from "http";
 import { WebSocketServer } from "ws";
+import crypto from "crypto";
 
 // ----------------------------
 // INIT APP
@@ -17,8 +18,9 @@ app.use(cors());
 // DATABASE INIT
 // ----------------------------
 const db = new Database("./database.sqlite");
-console.log("SQLite loaded (better-sqlite3)");
+console.log("SQLite loaded");
 
+// Main users table
 db.prepare(`
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,6 +33,15 @@ CREATE TABLE IF NOT EXISTS users (
 )
 `).run();
 
+// ADD avatar column if missing
+try {
+  db.prepare("ALTER TABLE users ADD COLUMN avatar TEXT").run();
+  console.log("Added avatar column");
+} catch (e) {
+  // Column exists — nothing to do
+}
+
+// Bets table
 db.prepare(`
 CREATE TABLE IF NOT EXISTS bets (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,6 +57,7 @@ CREATE TABLE IF NOT EXISTS bets (
 )
 `).run();
 
+// Price history
 db.prepare(`
 CREATE TABLE IF NOT EXISTS price_history (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -55,6 +67,47 @@ CREATE TABLE IF NOT EXISTS price_history (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 )
 `).run();
+// Ensure avatar column exists
+try {
+  db.prepare(`ALTER TABLE users ADD COLUMN avatar TEXT`).run();
+  console.log("Added column: avatar");
+} catch (e) {
+  console.log("Avatar column already exists");
+}
+
+
+// ----------------------------
+// IDENTICON AVATAR GENERATOR
+// ----------------------------
+function generateAvatar(wallet) {
+  const hash = crypto.createHash("sha256").update(wallet).digest("hex");
+
+  const colors = ["#14b8a6", "#0ea5e9", "#22c55e", "#a855f7"];
+  const bg = "#0f172a";
+
+  const blocks = [];
+  for (let i = 0; i < 25; i++) {
+    const char = parseInt(hash[i], 16);
+    const color = colors[char % colors.length];
+    if (char % 2 === 0) blocks.push({ i, color });
+  }
+
+  let svg = `
+  <svg width="100" height="100" viewBox="0 0 5 5" xmlns="http://www.w3.org/2000/svg">
+    <rect width="5" height="5" fill="${bg}"/>
+  `;
+
+  blocks.forEach(b => {
+    const x = b.i % 5;
+    const y = Math.floor(b.i / 5);
+    svg += `<rect x="${x}" y="${y}" width="1" height="1" fill="${b.color}" />`;
+  });
+
+  svg += `</svg>`;
+
+  return "data:image/svg+xml;base64," + Buffer.from(svg).toString("base64");
+}
+
 
 // ----------------------------
 // CRON – PRICE HISTORY
@@ -89,7 +142,7 @@ async function updatePrices() {
       );
     }
 
-    console.log("Price history updated:", new Date().toISOString());
+    console.log("Price history updated");
   } catch (e) {
     console.error("CRON ERROR:", e);
   }
@@ -98,45 +151,7 @@ async function updatePrices() {
 cron.schedule("*/1 * * * *", updatePrices);
 updatePrices();
 
-import crypto from "crypto";
 
-function generateAvatar(wallet) {
-  const hash = crypto.createHash("sha256").update(wallet).digest("hex");
-
-  // Цвета в стиле SynthETH
-  const colors = [
-    "#14b8a6", // teal
-    "#0ea5e9", // blue
-    "#22c55e", // green
-    "#a855f7", // violet
-  ];
-
-  const bg = "#0f172a"; // dark slate
-  
-  const blocks = [];
-  for (let i = 0; i < 25; i++) {
-    const char = parseInt(hash[i], 16);
-    const color = colors[char % colors.length];
-
-    if (char % 2 === 0) blocks.push({ i, color });
-  }
-
-  // Build SVG 5x5
-  let svg = `
-  <svg width="100" height="100" viewBox="0 0 5 5" xmlns="http://www.w3.org/2000/svg">
-    <rect width="5" height="5" fill="${bg}"/>
-  `;
-
-  blocks.forEach(b => {
-    const x = b.i % 5;
-    const y = Math.floor(b.i / 5);
-    svg += `<rect x="${x}" y="${y}" width="1" height="1" fill="${b.color}" />`;
-  });
-
-  svg += `</svg>`;
-
-  return "data:image/svg+xml;base64," + Buffer.from(svg).toString("base64");
-}
 // ----------------------------
 // LOGIN
 // ----------------------------
@@ -147,18 +162,19 @@ app.post("/api/login", (req, res) => {
 
   let user = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
 
-if (!user) {
-  const avatar = generateAvatar(wallet);
+  if (!user) {
+    const avatar = generateAvatar(wallet);
 
-  db.prepare(`
-    INSERT INTO users (wallet, balance, avatar)
-    VALUES (?, 1000, ?)
-  `).run(wallet, avatar);
+    db.prepare(`
+      INSERT INTO users (wallet, balance, avatar)
+      VALUES (?, 1000, ?)
+    `).run(wallet, avatar);
 
-  user = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
+    user = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
 
-  return res.json({ user, created: true });
-}
+    return res.json({ user, created: true });
+  }
+
   res.json({ user, created: false });
 });
 
@@ -171,12 +187,11 @@ app.post("/api/set-username", (req, res) => {
   if (!wallet || !username)
     return res.status(400).json({ error: "Wallet + username required" });
 
-  const taken = db
-    .prepare("SELECT * FROM users WHERE username = ? AND wallet != ?")
-    .get(username, wallet);
+  const taken = db.prepare(
+    "SELECT * FROM users WHERE username = ? AND wallet != ?"
+  ).get(username, wallet);
 
-  if (taken)
-    return res.status(400).json({ error: "Username already taken" });
+  if (taken) return res.status(400).json({ error: "Username already taken" });
 
   db.prepare("UPDATE users SET username = ? WHERE wallet = ?")
     .run(username, wallet);
@@ -186,41 +201,23 @@ app.post("/api/set-username", (req, res) => {
 });
 
 // ----------------------------
-// MARKETS LIST
+// LEADERBOARD
 // ----------------------------
-app.get("/api/prediction/markets", async (req, res) => {
-  try {
-    const r = await fetch("https://gamma-api.polymarket.com/markets?limit=500&active=true");
-    const data = await r.json();
+app.get("/api/leaderboard", (req, res) => {
+  const type = req.query.type === "duel" ? "duel_score" : "score";
 
-    const markets = data
-      .filter(m => m.outcomes?.includes("Yes") && m.outcomes.includes("No"))
-      .map(m => {
-        const prices = Array.isArray(m.outcomePrices)
-          ? m.outcomePrices
-          : JSON.parse(m.outcomePrices);
+  const rows = db.prepare(`
+    SELECT username, wallet, ${type} AS score, avatar
+    FROM users
+    ORDER BY ${type} DESC
+    LIMIT 50
+  `).all();
 
-        return {
-          id: m.id,
-          question:
-            m.question ||
-            m.title ||
-            (m.slug ? m.slug.replace(/-/g, " ") : "Unknown question"),
-          yesProb: Number(prices[0]),
-          noProb: Number(prices[1]),
-          category: m.category
-        };
-      });
-
-    res.json({ markets });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Failed to load markets" });
-  }
+  res.json({ leaderboard: rows });
 });
 
 // ----------------------------
-// RANDOM MARKET FOR GAME
+// RANDOM MARKET API
 // ----------------------------
 const GAMMA_URL = "https://gamma-api.polymarket.com/markets?limit=800&active=true";
 
@@ -229,8 +226,7 @@ async function getRandomYesNoMarket() {
   const data = await r.json();
 
   const valid = data.filter(m =>
-    m.outcomes?.includes("Yes") &&
-    m.outcomes.includes("No")
+    m.outcomes?.includes("Yes") && m.outcomes.includes("No")
   );
 
   if (!valid.length) {
@@ -254,10 +250,7 @@ async function getRandomYesNoMarket() {
 
   return {
     id: m.id,
-    question:
-      m.question ||
-      m.title ||
-      (m.slug ? m.slug.replace(/-/g, " ") : "Unknown question"),
+    question: m.question || m.title || "Unknown question",
     yesProb: Number(prices[yesIdx]),
     noProb: Number(prices[noIdx])
   };
@@ -270,18 +263,7 @@ app.get("/api/polymarket-question", async (req, res) => {
     res.status(500).json({ error: "Failed" });
   }
 });
-app.get("/api/leaderboard", (req, res) => {
-  const type = req.query.type === "duel" ? "duel_score" : "score";
 
-  const rows = db.prepare(`
-    SELECT username, wallet, ${type} AS score, avatar
-    FROM users
-    ORDER BY ${type} DESC
-    LIMIT 50
-  `).all();
-
-  res.json({ leaderboard: rows });
-});
 // =====================================================================
 // DUEL MODE (PvP)
 // =====================================================================
@@ -336,8 +318,7 @@ function createDuel(p1, p2) {
 }
 
 async function startRound(duel) {
-  if (duel.currentRound >= ROUNDS_TOTAL)
-    return finishDuel(duel);
+  if (duel.currentRound >= ROUNDS_TOTAL) return finishDuel(duel);
 
   duel.currentRound++;
   duel.answered = [null, null];
@@ -422,7 +403,7 @@ function finishDuel(duel) {
   duels.delete(duel.id);
 }
 
-// WS HANDLER
+
 wss.on("connection", ws => {
   ws.on("message", raw => {
     let msg;
