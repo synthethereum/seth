@@ -334,8 +334,66 @@ app.get("/api/polymarket-question", async (req, res) => {
   }
 });
 
+// ==============================
+// PLACE BET
+// ==============================
+app.post("/api/prediction/bet", (req, res) => {
+  const { wallet, market_id, question, side, amount, coeff } = req.body;
+
+  if (!wallet  !market_id  !side || !amount)
+    return res.status(400).json({ error: "Missing parameters" });
+
+  const user = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
+  if (!user) return res.status(400).json({ error: "User not found" });
+
+  if (user.balance < amount)
+    return res.status(400).json({ error: "Insufficient balance" });
+
+  const potential_win = Number(amount) * Number(coeff);
+
+  db.prepare(`
+    INSERT INTO bets (wallet, market_id, question, side, amount, coeff, potential_win)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(wallet, market_id, question, side, amount, coeff, potential_win);
+
+  db.prepare("UPDATE users SET balance = balance - ? WHERE wallet = ?")
+    .run(amount, wallet);
+
+  const updated = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
+
+  res.json({ status: "ok", newBalance: updated.balance });
+});
+
+// ==============================
+// USER BALANCE REFRESH
+// ==============================
+app.get("/api/user/:wallet", (req, res) => {
+  const wallet = req.params.wallet;
+
+  const user = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  res.json({ user });
+});
+
+// ==============================
+// MARKET HISTORY
+// ==============================
+app.get("/api/market-history/:id", (req, res) => {
+  const marketId = req.params.id;
+
+  const rows = db.prepare(`
+    SELECT yes_price, no_price, created_at
+    FROM price_history
+    WHERE market_id = ?
+    ORDER BY created_at ASC
+  `).all(marketId);
+
+  res.json({ history: rows });
+});
+
 // =====================================================================
-// DUEL MODE (PvP)
+// DUEL MODE
 // =====================================================================
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: "/duel" });
