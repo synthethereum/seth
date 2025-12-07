@@ -364,6 +364,23 @@ app.post("/api/prediction/bet", (req, res) => {
 });
 
 // ==============================
+// MY BETS (list bets by wallet)
+// ==============================
+app.get("/api/prediction/my-bets/:wallet", (req, res) => {
+  const wallet = req.params.wallet;
+
+  const rows = db.prepare(`
+    SELECT id, market_id, question, side, amount, coeff, potential_win, created_at
+    FROM bets
+    WHERE wallet = ?
+    ORDER BY created_at DESC
+  `).all(wallet);
+
+  res.json(rows);
+});
+
+
+// ==============================
 // USER BALANCE REFRESH
 // ==============================
 app.get("/api/user/:wallet", (req, res) => {
