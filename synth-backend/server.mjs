@@ -98,6 +98,45 @@ async function updatePrices() {
 cron.schedule("*/1 * * * *", updatePrices);
 updatePrices();
 
+import crypto from "crypto";
+
+function generateAvatar(wallet) {
+  const hash = crypto.createHash("sha256").update(wallet).digest("hex");
+
+  // Цвета в стиле SynthETH
+  const colors = [
+    "#14b8a6", // teal
+    "#0ea5e9", // blue
+    "#22c55e", // green
+    "#a855f7", // violet
+  ];
+
+  const bg = "#0f172a"; // dark slate
+  
+  const blocks = [];
+  for (let i = 0; i < 25; i++) {
+    const char = parseInt(hash[i], 16);
+    const color = colors[char % colors.length];
+
+    if (char % 2 === 0) blocks.push({ i, color });
+  }
+
+  // Build SVG 5x5
+  let svg = `
+  <svg width="100" height="100" viewBox="0 0 5 5" xmlns="http://www.w3.org/2000/svg">
+    <rect width="5" height="5" fill="${bg}"/>
+  `;
+
+  blocks.forEach(b => {
+    const x = b.i % 5;
+    const y = Math.floor(b.i / 5);
+    svg += `<rect x="${x}" y="${y}" width="1" height="1" fill="${b.color}" />`;
+  });
+
+  svg += `</svg>`;
+
+  return "data:image/svg+xml;base64," + Buffer.from(svg).toString("base64");
+}
 // ----------------------------
 // LOGIN
 // ----------------------------
@@ -108,15 +147,18 @@ app.post("/api/login", (req, res) => {
 
   let user = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
 
-  if (!user) {
-    db.prepare(`INSERT INTO users (wallet, balance) VALUES (?, 1000)`)
-      .run(wallet);
+if (!user) {
+  const avatar = generateAvatar(wallet);
 
-    user = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
+  db.prepare(`
+    INSERT INTO users (wallet, balance, avatar)
+    VALUES (?, 1000, ?)
+  `).run(wallet, avatar);
 
-    return res.json({ user, created: true });
-  }
+  user = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
 
+  return res.json({ user, created: true });
+}
   res.json({ user, created: false });
 });
 
@@ -228,7 +270,18 @@ app.get("/api/polymarket-question", async (req, res) => {
     res.status(500).json({ error: "Failed" });
   }
 });
+app.get("/api/leaderboard", (req, res) => {
+  const type = req.query.type === "duel" ? "duel_score" : "score";
 
+  const rows = db.prepare(`
+    SELECT username, wallet, ${type} AS score, avatar
+    FROM users
+    ORDER BY ${type} DESC
+    LIMIT 50
+  `).all();
+
+  res.json({ leaderboard: rows });
+});
 // =====================================================================
 // DUEL MODE (PvP)
 // =====================================================================
