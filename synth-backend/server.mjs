@@ -399,22 +399,6 @@ app.post("/api/game/save-score", (req, res) => {
   res.json({ ok: true });
 });
 
-
-// ==============================
-// LEADERBOARD (TOP USERS)
-// ==============================
-app.get("/api/leaderboard", (req, res) => {
-  const rows = db.prepare(`
-    SELECT username, score 
-    FROM users 
-    ORDER BY score DESC 
-    LIMIT 50
-  `).all();
-
-  res.json(rows);
-});
-
-
 // ==============================
 // USER BALANCE REFRESH
 // ==============================
