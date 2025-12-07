@@ -380,6 +380,27 @@ app.get("/api/prediction/my-bets/:wallet", (req, res) => {
 });
 
 // ==============================
+// SAVE GAME SCORE (solo mode)
+// ==============================
+app.post("/api/game/save-score", (req, res) => {
+  const { wallet, score } = req.body;
+
+  if (!wallet || score === undefined) {
+    return res.status(400).json({ error: "Missing params" });
+  }
+
+  // Обновляем — но оставляем максимальный score за все время
+  db.prepare(`
+      UPDATE users
+      SET score = MAX(score, ?)
+      WHERE wallet = ?
+  `).run(score, wallet);
+
+  res.json({ ok: true });
+});
+
+
+// ==============================
 // LEADERBOARD (TOP USERS)
 // ==============================
 app.get("/api/leaderboard", (req, res) => {
