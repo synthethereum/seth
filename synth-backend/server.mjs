@@ -340,8 +340,9 @@ app.get("/api/polymarket-question", async (req, res) => {
 app.post("/api/prediction/bet", (req, res) => {
   const { wallet, market_id, question, side, amount, coeff } = req.body;
 
-  if (!wallet  !market_id  !side || !amount)
+  if (!wallet || !market_id || !side || !amount) {
     return res.status(400).json({ error: "Missing parameters" });
+  }
 
   const user = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
   if (!user) return res.status(400).json({ error: "User not found" });
@@ -359,9 +360,7 @@ app.post("/api/prediction/bet", (req, res) => {
   db.prepare("UPDATE users SET balance = balance - ? WHERE wallet = ?")
     .run(amount, wallet);
 
-  const updated = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
-
-  res.json({ status: "ok", newBalance: updated.balance });
+  res.json({ success: true, potential_win });
 });
 
 // ==============================
