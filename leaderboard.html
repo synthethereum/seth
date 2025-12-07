@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SynthETH – Leaderboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: Inter, sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+
+<div class="max-w-3xl mx-auto py-10 px-4">
+  <h1 class="text-3xl font-bold text-center mb-6">Leaderboard</h1>
+
+  <div class="flex justify-center gap-4 mb-6">
+    <button onclick="loadBoard('score')" class="px-4 py-2 bg-teal-600 rounded-lg hover:bg-teal-500">Game Score</button>
+    <button onclick="loadBoard('duel')" class="px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-500">Duel Rating</button>
+  </div>
+
+  <div id="board" class="space-y-3"></div>
+</div>
+
+<script>
+const API_BASE = "https://seth-qnod.onrender.com";
+
+async function loadBoard(type="score") {
+  document.getElementById("board").innerHTML =
+    '<p class="text-center text-slate-400">Loading...</p>';
+
+  const res = await fetch(`${API_BASE}/api/leaderboard?type=${type}`);
+  const data = await res.json();
+
+  const box = document.getElementById("board");
+  box.innerHTML = "";
+
+  data.leaderboard.forEach((u, i) => {
+    const div = document.createElement("div");
+    div.className =
+      "flex items-center gap-4 bg-slate-900/60 p-3 rounded-xl border border-slate-800";
+
+    div.innerHTML = `
+      <p class="text-slate-400 w-6">${i+1}</p>
+      <img src="${u.avatar}" class="w-10 h-10 rounded-lg border border-teal-500" />
+      <div class="flex-1">
+        <p class="text-white font-semibold">${u.username}</p>
+        <p class="text-slate-500 text-xs">${u.wallet.slice(0,6)}...${u.wallet.slice(-4)}</p>
+      </div>
+      <p class="text-teal-300 font-bold">${u.score}</p>
+    `;
+
+    box.appendChild(div);
+  });
+}
+
+loadBoard();
+</script>
+
+</body>
+</html>
