@@ -251,35 +251,34 @@ app.get("/api/leaderboard", (req, res) => {
 // ----------------------------
 app.get("/api/prediction/markets", async (req, res) => {
   try {
-    // 🔹 1. Запрашиваем рынки из gamma API
     const r = await fetch(
-      "https://gamma-api.polymarket.com/markets?limit=500&active=true"
+      "https://clob.polymarket.com/markets?active=true&limit=200"
     );
-    const data = await r.json(); // gamma API возвращает массив markets
 
+    const data = await r.json(); // array of markets
     const now = Date.now();
 
-    // 🔹 2. Фильтруем только актуальные рынки
     const fresh = data
-      .filter(m => m.active)                                   // рынок активен
-      .filter(m => m.endDate && new Date(m.endDate).getTime() > now) // не закончился
-      .filter(m => m.prices && m.prices.yes !== undefined)     // есть цена
+      .filter(m => m.active) // only active
+      .filter(m => m.endTime && m.endTime * 1000 > now) // NOT expired
+      .filter(m => m.yesPrice !== undefined) // has price
       .map(m => ({
         id: m.id,
         question: m.question,
+        yesProb: Number(m.yesPrice),
+        noProb: 1 - Number(m.yesPrice),
         category: m.category || "General",
-        yesProb: Number(m.prices.yes),                         // вероятность YES
-        noProb: Number(m.prices.no),                           // вероятность NO
-        closeTime: new Date(m.endDate).getTime(),              // timestamp в ms
+        closeTime: m.endTime * 1000
       }));
 
     res.json({ markets: fresh });
 
   } catch (err) {
-    console.error("MARKET LOAD ERROR:", err);
+    console.error(err);
     res.status(500).json({ error: "Failed to load markets" });
   }
 });
+
 
 
 // ----------------------------
