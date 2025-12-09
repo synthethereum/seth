@@ -255,9 +255,6 @@ app.get("/api/leaderboard", (req, res) => {
 });
 
 // ----------------------------
-// MARKETS LIST (Polymarket CLOB)
-// ----------------------------
-// ----------------------------
 // MARKETS LIST (Gamma API, только живые рынки)
 // ----------------------------
 app.get("/api/prediction/markets", async (req, res) => {
@@ -409,6 +406,16 @@ async function getRandomYesNoMarket() {
   return valid[Math.floor(Math.random() * valid.length)];
 }
 
+app.get("/api/polymarket-question", async (req, res) => {
+  try {
+    const m = await getRandomYesNoMarket();
+    res.json(m);
+  } catch (e) {
+    console.error("Q ERROR:", e);
+    res.status(500).json({ error: "Failed to load question" });
+  }
+});
+
 // ==============================
 // PLACE BET
 // ==============================
@@ -505,7 +512,6 @@ app.get("/api/market-history/:id", (req, res) => {
 // =====================================================================
 // DUEL MODE
 // =====================================================================
-const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: "/duel" });
 
 const waitingPlayers = [];
@@ -685,6 +691,8 @@ wss.on("connection", (ws) => {
 // START SERVER
 // ----------------------------
 const PORT = process.env.PORT || 4000;
+const server = http.createServer(app);
+const wss = new WebSocketServer({ server, path: "/duel" });
 
 server.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
