@@ -331,7 +331,7 @@ app.get("/api/prediction/markets", async (req, res) => {
 });
 
 // ----------------------------
-// RANDOM MARKET API (для одиночного вопроса)
+// RANDOM MARKET API (updated & working)
 // ----------------------------
 const GAMMA_URL =
   "https://gamma-api.polymarket.com/markets?limit=800&active=true&closed=false";
@@ -346,26 +346,39 @@ async function getRandomYesNoMarket() {
   for (const m of data) {
     if (m.closed) continue;
 
-    // дата окончания
+    // END DATE
     const rawEnd =
       m.endDateIso ||
       m.endDate ||
-      (m.events?.[0]?.endDateIso || m.events?.[0]?.endDate);
+      m.events?.[0]?.endDateIso ||
+      m.events?.[0]?.endDate;
 
     const endTs = Date.parse(rawEnd);
     if (!endTs || endTs <= now) continue;
 
-    // ❗ ФИЛЬТР НА "СВЕЖИЕ" МАРКЕТЫ (новые, актуальные)
-    const createdTs = Date.parse(m.createdTime || m.createdAt || "");
-    if (!createdTs || now - createdTs > 30 * 24 * 60 * 60 * 1000) continue; 
-    // → исключаем старше 30 дней
+    // CREATED DATE — главный фикс!!!
+    const rawCreated =
+      m.created_at ||
+      m.createdAt ||
+      m.startDateIso ||
+      m.startDate ||
+      m.events?.[0]?.startDateIso ||
+      m.events?.[0]?.startDate;
 
-    // ❗ ФИЛЬТР НА ОБЪЁМ ТОРГОВ (чтобы рынок не был мёртвым)
-    const volume = Number(m.volume || m.liquidity || m.totalVolume || 0);
-    if (volume < 5000) continue; 
-    // → минимум $5000 объёма
+    const createdTs = Date.parse(rawCreated);
+    if (!createdTs) continue;
+    if (now - createdTs > 60 * 24 * 60 * 60 * 1000) continue; // рынки младше 60 дней
 
-    // outcomes / prices
+    // VOLUME
+    const volume = Number(
+      m.volume ||
+      m.totalVolume ||
+      m.liquidity ||
+      0
+    );
+    if (volume < 2000) continue;
+
+    // OUTCOMES
     let outcomes = m.outcomes;
     let prices = m.outcomePrices;
 
@@ -405,6 +418,7 @@ async function getRandomYesNoMarket() {
 
   return valid[Math.floor(Math.random() * valid.length)];
 }
+
 
 app.get("/api/polymarket-question", async (req, res) => {
   try {
