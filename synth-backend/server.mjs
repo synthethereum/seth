@@ -121,12 +121,12 @@ try {
 }
 
 // ----------------------------
-// CRON – PRICE HISTORY
+// CRON – PRICE HISTORY (Gamma, только живые Yes/No)
 // ----------------------------
 async function updatePrices() {
   try {
     const r = await fetch(
-      "https://gamma-api.polymarket.com/markets?limit=200&active=true"
+      "https://gamma-api.polymarket.com/markets?limit=500&active=true&closed=false"
     );
     const data = await r.json();
 
@@ -136,26 +136,33 @@ async function updatePrices() {
     `);
 
     for (const m of data) {
-      if (!m.outcomes?.includes("Yes") || !m.outcomes.includes("No")) continue;
+      if (m.closed) continue;
 
-      const outcomes = Array.isArray(m.outcomes)
-        ? m.outcomes
-        : JSON.parse(m.outcomes);
-      const prices = Array.isArray(m.outcomePrices)
-        ? m.outcomePrices
-        : JSON.parse(m.outcomePrices);
+      let outcomes = m.outcomes;
+      let prices = m.outcomePrices;
+
+      if (typeof outcomes === "string") {
+        try { outcomes = JSON.parse(outcomes); } catch {}
+      }
+      if (typeof prices === "string") {
+        try { prices = JSON.parse(prices); } catch {}
+      }
+
+      if (!Array.isArray(outcomes) || !Array.isArray(prices)) continue;
+      if (!outcomes.includes("Yes") || !outcomes.includes("No")) continue;
 
       const yesIdx = outcomes.indexOf("Yes");
       const noIdx = outcomes.indexOf("No");
 
-      insert.run(
-        m.id,
-        Number(prices[yesIdx] || 0),
-        Number(prices[noIdx] || 0)
-      );
+      const yesPrice = Number(prices[yesIdx]);
+      const noPrice = Number(prices[noIdx]);
+
+      if (!Number.isFinite(yesPrice) || !Number.isFinite(noPrice)) continue;
+
+      insert.run(m.id, yesPrice, noPrice);
     }
 
-    console.log("Price history updated");
+    console.log("✔ Price history updated");
   } catch (e) {
     console.error("CRON ERROR:", e);
   }
@@ -163,6 +170,7 @@ async function updatePrices() {
 
 cron.schedule("*/1 * * * *", updatePrices);
 updatePrices();
+
 
 // ----------------------------
 // LOGIN
@@ -249,32 +257,45 @@ app.get("/api/leaderboard", (req, res) => {
 // ----------------------------
 // MARKETS LIST (Polymarket CLOB)
 // ----------------------------
+// ----------------------------
+// MARKETS LIST (Gamma API, только живые рынки)
+// ----------------------------
 app.get("/api/prediction/markets", async (req, res) => {
   try {
     const r = await fetch(
-      "https://clob.polymarket.com/markets?active=true&limit=200"
+      "https://gamma-api.polymarket.com/markets?limit=500&active=true&closed=false"
     );
 
-    const raw = await r.json();
-
-    // clob иногда отдаёт { markets: [...] }, иногда сразу массив
-    const data = Array.isArray(raw) ? raw : (raw.markets || []);
+    const data = await r.json(); // массив рынков
     const now = Date.now();
 
     const markets = [];
 
     for (const m of data) {
-      // 1) только активные
-      if (m.active === false) continue;
+      // 1) пропускаем явно закрытые
+      if (m.closed) continue;
 
-      // 2) outcomes / prices
+      // 2) достаём дату окончания
+      const rawEnd =
+        m.endDateIso ||
+        m.endDate ||
+        (m.events && m.events[0] && (m.events[0].endDateIso || m.events[0].endDate));
+
+      if (!rawEnd) continue;
+
+      const endTs = Date.parse(rawEnd);
+      if (!endTs || endTs <= now) continue; // только те, что ещё не закончились
+
+      // 3) outcomes / outcomePrices
       let outcomes = m.outcomes;
+      let prices = m.outcomePrices;
+
       if (typeof outcomes === "string") {
         try {
           outcomes = JSON.parse(outcomes);
         } catch {}
       }
-      let prices = m.outcomePrices;
+
       if (typeof prices === "string") {
         try {
           prices = JSON.parse(prices);
@@ -286,35 +307,14 @@ app.get("/api/prediction/markets", async (req, res) => {
 
       const yesIdx = outcomes.indexOf("Yes");
       const noIdx = outcomes.indexOf("No");
-      if (yesIdx === -1 || noIdx === -1) continue;
 
       const yesProb = Number(prices[yesIdx]);
       const noProb = Number(prices[noIdx]);
 
       if (!Number.isFinite(yesProb) || !Number.isFinite(noProb)) continue;
 
-      // 3) вытаскиваем время окончания рынка из нескольких вариантов
-      const rawTime =
-        m.endTime ||
-        m.endDate ||
-        m.closeTime ||
-        m.expirationTime ||
-        m.closingTime;
-
-      let closeTime = null;
-      if (typeof rawTime === "number") {
-        // если похоже на секунды → умножаем на 1000
-        closeTime = rawTime < 1e12 ? rawTime * 1000 : rawTime;
-      } else if (typeof rawTime === "string") {
-        const ts = Date.parse(rawTime);
-        if (!isNaN(ts)) closeTime = ts;
-      }
-
-      if (!closeTime) continue;
-      if (closeTime <= now) continue; // только ещё не завершённые
-
       markets.push({
-        id: m.id || m.marketId,
+        id: m.id,
         question:
           m.question ||
           m.title ||
@@ -322,7 +322,7 @@ app.get("/api/prediction/markets", async (req, res) => {
         yesProb,
         noProb,
         category: m.category || "General",
-        closeTime,
+        closeTime: endTs, // это мы потом используем на фронте для таймера
       });
     }
 
