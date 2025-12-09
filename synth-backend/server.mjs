@@ -337,51 +337,85 @@ app.get("/api/prediction/markets", async (req, res) => {
 // RANDOM MARKET API (для одиночного вопроса)
 // ----------------------------
 const GAMMA_URL =
-  "https://gamma-api.polymarket.com/markets?limit=800&active=true";
+  "https://gamma-api.polymarket.com/markets?limit=800&active=true&closed=false";
 
 async function getRandomYesNoMarket() {
   const r = await fetch(GAMMA_URL);
   const data = await r.json();
+  const now = Date.now();
 
-  const valid = data.filter(
-    (m) => m.outcomes?.includes("Yes") && m.outcomes.includes("No")
-  );
+  const valid = [];
+
+  for (const m of data) {
+    if (m.closed) continue;
+
+    // корректная дата окончания
+    const rawEnd =
+      m.endDateIso ||
+      m.endDate ||
+      (m.events &&
+        m.events[0] &&
+        (m.events[0].endDateIso || m.events[0].endDate));
+
+    if (!rawEnd) continue;
+    const endTs = Date.parse(rawEnd);
+    if (!endTs || endTs <= now) continue;
+
+    // outcomes / prices
+    let outcomes = m.outcomes;
+    let prices = m.outcomePrices;
+
+    if (typeof outcomes === "string") {
+      try { outcomes = JSON.parse(outcomes); } catch {}
+    }
+    if (typeof prices === "string") {
+      try { prices = JSON.parse(prices); } catch {}
+    }
+
+    if (!Array.isArray(outcomes) || !Array.isArray(prices)) continue;
+    if (!outcomes.includes("Yes") || !outcomes.includes("No")) continue;
+
+    const yesIdx = outcomes.indexOf("Yes");
+    const noIdx = outcomes.indexOf("No");
+
+    const yes = Number(prices[yesIdx]);
+    const no = Number(prices[noIdx]);
+
+    if (!Number.isFinite(yes) || !Number.isFinite(no)) continue;
+
+    valid.push({
+      id: m.id,
+      question:
+        m.question ||
+        m.title ||
+        (m.slug ? m.slug.replace(/-/g, " ") : "Unknown question"),
+      yesProb: yes,
+      noProb: no,
+    });
+  }
 
   if (!valid.length) {
     return {
       id: "fallback",
-      question: "Will ETH be above $1,000 tomorrow?",
+      question: "Will ETH be above $2,000 tomorrow?",
       yesProb: 0.5,
       noProb: 0.5,
     };
   }
 
-  const m = valid[Math.floor(Math.random() * valid.length)];
-
-  const outs = Array.isArray(m.outcomes) ? m.outcomes : JSON.parse(m.outcomes);
-  const prices = Array.isArray(m.outcomePrices)
-    ? m.outcomePrices
-    : JSON.parse(m.outcomePrices);
-
-  const yesIdx = outs.indexOf("Yes");
-  const noIdx = outs.indexOf("No");
-
-  return {
-    id: m.id,
-    question: m.question || m.title || "Unknown question",
-    yesProb: Number(prices[yesIdx]),
-    noProb: Number(prices[noIdx]),
-  };
+  return valid[Math.floor(Math.random() * valid.length)];
 }
 
 app.get("/api/polymarket-question", async (req, res) => {
   try {
-    res.json(await getRandomYesNoMarket());
+    const m = await getRandomYesNoMarket();
+    res.json(m);
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Failed" });
+    console.error("Q ERROR:", e);
+    res.status(500).json({ error: "Failed to load question" });
   }
 });
+
 
 // ==============================
 // PLACE BET
