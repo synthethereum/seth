@@ -512,7 +512,6 @@ app.get("/api/market-history/:id", (req, res) => {
 // =====================================================================
 // DUEL MODE
 // =====================================================================
-const wss = new WebSocketServer({ server, path: "/duel" });
 
 const waitingPlayers = [];
 const duels = new Map();
@@ -647,6 +646,17 @@ function finishDuel(duel) {
   duels.delete(duel.id);
 }
 
+// ----------------------------
+// START SERVER + WebSocket
+// ----------------------------
+const PORT = process.env.PORT || 4000;
+
+const server = http.createServer(app);
+
+// создаём wss ТОЛЬКО здесь!
+const wss = new WebSocketServer({ server, path: "/duel" });
+
+// теперь wss существует → можно навешивать события
 wss.on("connection", (ws) => {
   ws.on("message", (raw) => {
     let msg;
@@ -686,13 +696,6 @@ wss.on("connection", (ws) => {
 
   ws.on("close", () => console.log("WS disconnected"));
 });
-
-// ----------------------------
-// START SERVER
-// ----------------------------
-const PORT = process.env.PORT || 4000;
-const server = http.createServer(app);
-const wss = new WebSocketServer({ server, path: "/duel" });
 
 server.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
