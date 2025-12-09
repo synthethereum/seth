@@ -353,43 +353,43 @@ async function getRandomYesNoMarket() {
       m.events?.[0]?.endDateIso ||
       m.events?.[0]?.endDate;
 
-    const endTs = Date.parse(rawEnd);
+    const endTs = rawEnd ? Date.parse(rawEnd) : null;
     if (!endTs || endTs <= now) continue;
 
-    // CREATED DATE — главный фикс!!!
+    // CREATED DATE — безопасный парсер
     const rawCreated =
-      m.created_at ||
+      m.createdTime ||
       m.createdAt ||
-      m.startDateIso ||
-      m.startDate ||
+      m.creationTime ||
       m.events?.[0]?.startDateIso ||
-      m.events?.[0]?.startDate;
+      null;
 
-    const createdTs = Date.parse(rawCreated);
+    const createdTs = rawCreated ? Date.parse(rawCreated) : null;
     if (!createdTs) continue;
-    if (now - createdTs > 60 * 24 * 60 * 60 * 1000) continue; // рынки младше 60 дней
+
+    // максимум 90 дней
+    if (now - createdTs > 90 * 24 * 60 * 60 * 1000) continue;
 
     // VOLUME
-    const volume = Number(
-      m.volume ||
-      m.totalVolume ||
-      m.liquidity ||
-      0
-    );
-    if (volume < 2000) continue;
+    const volume = Number(m.volume || m.totalVolume || 0);
+    if (volume < 1000) continue;
 
     // OUTCOMES
     let outcomes = m.outcomes;
     let prices = m.outcomePrices;
 
-    if (typeof outcomes === "string") { try { outcomes = JSON.parse(outcomes); } catch {} }
-    if (typeof prices === "string") { try { prices = JSON.parse(prices); } catch {} }
+    try {
+      if (typeof outcomes === "string") outcomes = JSON.parse(outcomes);
+      if (typeof prices === "string") prices = JSON.parse(prices);
+    } catch {
+      continue;
+    }
 
     if (!Array.isArray(outcomes) || !Array.isArray(prices)) continue;
-    if (!outcomes.includes("Yes") || !outcomes.includes("No")) continue;
 
     const yesIdx = outcomes.indexOf("Yes");
     const noIdx = outcomes.indexOf("No");
+    if (yesIdx === -1 || noIdx === -1) continue;
 
     const yes = Number(prices[yesIdx]);
     const no = Number(prices[noIdx]);
@@ -410,7 +410,7 @@ async function getRandomYesNoMarket() {
   if (!valid.length) {
     return {
       id: "fallback",
-      question: "Will BTC be above $100,000 this year?",
+      question: "Will Bitcoin go up tomorrow?",
       yesProb: 0.5,
       noProb: 0.5,
     };
