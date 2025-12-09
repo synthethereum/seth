@@ -247,7 +247,7 @@ app.get("/api/leaderboard", (req, res) => {
 });
 
 // ----------------------------
-// MARKETS LIST (для игры / списков)
+// MARKETS LIST (Polymarket CLOB)
 // ----------------------------
 app.get("/api/prediction/markets", async (req, res) => {
   try {
@@ -255,31 +255,83 @@ app.get("/api/prediction/markets", async (req, res) => {
       "https://clob.polymarket.com/markets?active=true&limit=200"
     );
 
-    const data = await r.json(); // array of markets
+    const raw = await r.json();
+
+    // clob иногда отдаёт { markets: [...] }, иногда сразу массив
+    const data = Array.isArray(raw) ? raw : (raw.markets || []);
     const now = Date.now();
 
-    const fresh = data
-      .filter(m => m.active) // only active
-      .filter(m => m.endTime && m.endTime * 1000 > now) // NOT expired
-      .filter(m => m.yesPrice !== undefined) // has price
-      .map(m => ({
-        id: m.id,
-        question: m.question,
-        yesProb: Number(m.yesPrice),
-        noProb: 1 - Number(m.yesPrice),
+    const markets = [];
+
+    for (const m of data) {
+      // 1) только активные
+      if (m.active === false) continue;
+
+      // 2) outcomes / prices
+      let outcomes = m.outcomes;
+      if (typeof outcomes === "string") {
+        try {
+          outcomes = JSON.parse(outcomes);
+        } catch {}
+      }
+      let prices = m.outcomePrices;
+      if (typeof prices === "string") {
+        try {
+          prices = JSON.parse(prices);
+        } catch {}
+      }
+
+      if (!Array.isArray(outcomes) || !Array.isArray(prices)) continue;
+      if (!outcomes.includes("Yes") || !outcomes.includes("No")) continue;
+
+      const yesIdx = outcomes.indexOf("Yes");
+      const noIdx = outcomes.indexOf("No");
+      if (yesIdx === -1 || noIdx === -1) continue;
+
+      const yesProb = Number(prices[yesIdx]);
+      const noProb = Number(prices[noIdx]);
+
+      if (!Number.isFinite(yesProb) || !Number.isFinite(noProb)) continue;
+
+      // 3) вытаскиваем время окончания рынка из нескольких вариантов
+      const rawTime =
+        m.endTime ||
+        m.endDate ||
+        m.closeTime ||
+        m.expirationTime ||
+        m.closingTime;
+
+      let closeTime = null;
+      if (typeof rawTime === "number") {
+        // если похоже на секунды → умножаем на 1000
+        closeTime = rawTime < 1e12 ? rawTime * 1000 : rawTime;
+      } else if (typeof rawTime === "string") {
+        const ts = Date.parse(rawTime);
+        if (!isNaN(ts)) closeTime = ts;
+      }
+
+      if (!closeTime) continue;
+      if (closeTime <= now) continue; // только ещё не завершённые
+
+      markets.push({
+        id: m.id || m.marketId,
+        question:
+          m.question ||
+          m.title ||
+          (m.slug ? m.slug.replace(/-/g, " ") : "Unknown question"),
+        yesProb,
+        noProb,
         category: m.category || "General",
-        closeTime: m.endTime * 1000
-      }));
+        closeTime,
+      });
+    }
 
-    res.json({ markets: fresh });
-
+    res.json({ markets });
   } catch (err) {
-    console.error(err);
+    console.error("MARKETS ERROR:", err);
     res.status(500).json({ error: "Failed to load markets" });
   }
 });
-
-
 
 // ----------------------------
 // RANDOM MARKET API (для одиночного вопроса)
