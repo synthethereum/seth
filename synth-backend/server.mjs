@@ -251,38 +251,36 @@ app.get("/api/leaderboard", (req, res) => {
 // ----------------------------
 app.get("/api/prediction/markets", async (req, res) => {
   try {
+    // 🔹 1. Запрашиваем рынки из gamma API
     const r = await fetch(
       "https://gamma-api.polymarket.com/markets?limit=500&active=true"
     );
-    const data = await r.json();
+    const data = await r.json(); // gamma API возвращает массив markets
 
-    const markets = data
-      .filter(
-        (m) => m.outcomes?.includes("Yes") && m.outcomes.includes("No")
-      )
-      .map((m) => {
-        const prices = Array.isArray(m.outcomePrices)
-          ? m.outcomePrices
-          : JSON.parse(m.outcomePrices);
+    const now = Date.now();
 
-        return {
-          id: m.id,
-          question:
-            m.question ||
-            m.title ||
-            (m.slug ? m.slug.replace(/-/g, " ") : "Unknown question"),
-          yesProb: Number(prices[0]),
-          noProb: Number(prices[1]),
-          category: m.category,
-        };
-      });
+    // 🔹 2. Фильтруем только актуальные рынки
+    const fresh = data
+      .filter(m => m.active)                                   // рынок активен
+      .filter(m => m.endDate && new Date(m.endDate).getTime() > now) // не закончился
+      .filter(m => m.prices && m.prices.yes !== undefined)     // есть цена
+      .map(m => ({
+        id: m.id,
+        question: m.question,
+        category: m.category || "General",
+        yesProb: Number(m.prices.yes),                         // вероятность YES
+        noProb: Number(m.prices.no),                           // вероятность NO
+        closeTime: new Date(m.endDate).getTime(),              // timestamp в ms
+      }));
 
-    res.json({ markets });
-  } catch (e) {
-    console.error(e);
+    res.json({ markets: fresh });
+
+  } catch (err) {
+    console.error("MARKET LOAD ERROR:", err);
     res.status(500).json({ error: "Failed to load markets" });
   }
 });
+
 
 // ----------------------------
 // RANDOM MARKET API (для одиночного вопроса)
