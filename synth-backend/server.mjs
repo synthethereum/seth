@@ -349,28 +349,31 @@ async function getRandomYesNoMarket() {
   for (const m of data) {
     if (m.closed) continue;
 
-    // корректная дата окончания
+    // дата окончания
     const rawEnd =
       m.endDateIso ||
       m.endDate ||
-      (m.events &&
-        m.events[0] &&
-        (m.events[0].endDateIso || m.events[0].endDate));
+      (m.events?.[0]?.endDateIso || m.events?.[0]?.endDate);
 
-    if (!rawEnd) continue;
     const endTs = Date.parse(rawEnd);
     if (!endTs || endTs <= now) continue;
+
+    // ❗ ФИЛЬТР НА "СВЕЖИЕ" МАРКЕТЫ (новые, актуальные)
+    const createdTs = Date.parse(m.createdTime || m.createdAt || "");
+    if (!createdTs || now - createdTs > 30 * 24 * 60 * 60 * 1000) continue; 
+    // → исключаем старше 30 дней
+
+    // ❗ ФИЛЬТР НА ОБЪЁМ ТОРГОВ (чтобы рынок не был мёртвым)
+    const volume = Number(m.volume || m.liquidity || m.totalVolume || 0);
+    if (volume < 5000) continue; 
+    // → минимум $5000 объёма
 
     // outcomes / prices
     let outcomes = m.outcomes;
     let prices = m.outcomePrices;
 
-    if (typeof outcomes === "string") {
-      try { outcomes = JSON.parse(outcomes); } catch {}
-    }
-    if (typeof prices === "string") {
-      try { prices = JSON.parse(prices); } catch {}
-    }
+    if (typeof outcomes === "string") { try { outcomes = JSON.parse(outcomes); } catch {} }
+    if (typeof prices === "string") { try { prices = JSON.parse(prices); } catch {} }
 
     if (!Array.isArray(outcomes) || !Array.isArray(prices)) continue;
     if (!outcomes.includes("Yes") || !outcomes.includes("No")) continue;
@@ -397,7 +400,7 @@ async function getRandomYesNoMarket() {
   if (!valid.length) {
     return {
       id: "fallback",
-      question: "Will ETH be above $2,000 tomorrow?",
+      question: "Will BTC be above $100,000 this year?",
       yesProb: 0.5,
       noProb: 0.5,
     };
@@ -405,17 +408,6 @@ async function getRandomYesNoMarket() {
 
   return valid[Math.floor(Math.random() * valid.length)];
 }
-
-app.get("/api/polymarket-question", async (req, res) => {
-  try {
-    const m = await getRandomYesNoMarket();
-    res.json(m);
-  } catch (e) {
-    console.error("Q ERROR:", e);
-    res.status(500).json({ error: "Failed to load question" });
-  }
-});
-
 
 // ==============================
 // PLACE BET
