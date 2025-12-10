@@ -258,6 +258,7 @@ app.post("/api/set-username", (req, res) => {
 `).get(wallet);
 
 res.json({ status: "ok", user: updated });
+});
 
 // ----------------------------
 // LEADERBOARD
