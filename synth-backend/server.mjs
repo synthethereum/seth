@@ -175,49 +175,58 @@ async function updatePrices() {
 cron.schedule("*/1 * * * *", updatePrices);
 updatePrices();
 
-
 // ----------------------------
-// LOGIN
+// LOGIN (CREATE USER IF NOT EXISTS)
 // ----------------------------
 app.post("/api/login", (req, res) => {
-  const { wallet } = req.body;
+  const { wallet, username } = req.body;
 
-  if (!wallet) return res.status(400).json({ error: "Wallet required" });
+  if (!wallet) {
+    return res.status(400).json({ error: "Wallet required" });
+  }
 
+  // ищем существующего пользователя
   let user = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
 
-  // новый пользователь
+  // ---------- новый пользователь ----------
   if (!user) {
     const avatar = generateAvatar(wallet);
 
-    db.prepare(
-      `
-      INSERT INTO users (wallet, balance, avatar)
-      VALUES (?, 1000, ?)
-    `
-    ).run(wallet, avatar);
+    db.prepare(`
+      INSERT INTO users (wallet, username, avatar, balance, score, duel_score)
+      VALUES (?, ?, ?, 1000, 0, 0)
+    `).run(wallet, username || null, avatar);
 
     user = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
     return res.json({ user, created: true });
   }
 
+  // ---------- старый, но avatar пустой ----------
+  if (
+    !user.avatar ||
+    user.avatar === "undefined" ||
+    user.avatar === "null" ||
+    user.avatar.trim() === ""
+  ) {
+    const avatar = generateAvatar(wallet);
+    db.prepare("UPDATE users SET avatar = ? WHERE wallet = ?").run(
+      avatar,
+      wallet
+    );
+    user.avatar = avatar;
+  }
 
-  // старый пользователь, но avatar пустой – дорисуем
-if (
-  !user.avatar ||
-  user.avatar === "undefined" ||
-  user.avatar === "null" ||
-  user.avatar.trim() === ""
-) {
-  const avatar = generateAvatar(wallet);
-  db.prepare("UPDATE users SET avatar = ? WHERE wallet = ?").run(
-    avatar,
-    wallet
-  );
-  user.avatar = avatar;
-}
+  // ---------- обновление username, если его нет ----------
+  if (!user.username && username) {
+    db.prepare("UPDATE users SET username = ? WHERE wallet = ?").run(
+      username,
+      wallet
+    );
+    user.username = username;
+  }
 
-res.json({ user, created: false });
+  return res.json({ user, created: false });
+});
 
 // ----------------------------
 // SET USERNAME
