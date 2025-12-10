@@ -102,9 +102,13 @@ function generateAvatar(wallet) {
 
 // автопочинка старых юзеров без аватаров
 try {
-  const needAvatar = db
-    .prepare("SELECT wallet FROM users WHERE avatar IS NULL OR avatar = ''")
-    .all();
+  const needAvatar = db.prepare(`
+  SELECT wallet FROM users 
+  WHERE avatar IS NULL 
+     OR avatar = '' 
+     OR avatar = 'undefined'
+     OR avatar = 'null'
+`).all();
 
   for (const u of needAvatar) {
     const avatar = generateAvatar(u.wallet);
