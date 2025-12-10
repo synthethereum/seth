@@ -251,9 +251,13 @@ app.post("/api/set-username", (req, res) => {
     wallet
   );
 
-  const updated = db.prepare("SELECT * FROM users WHERE wallet = ?").get(wallet);
-  res.json({ status: "ok", user: updated });
-});
+ const updated = db.prepare(`
+  SELECT wallet, username, avatar, score, duel_score, balance 
+  FROM users
+  WHERE wallet = ?
+`).get(wallet);
+
+res.json({ status: "ok", user: updated });
 
 // ----------------------------
 // LEADERBOARD
