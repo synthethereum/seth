@@ -7,6 +7,9 @@ import http from "http";
 import { WebSocketServer } from "ws";
 import crypto from "crypto";
 
+const GAMMA_URL =
+  "https://gamma-api.polymarket.com/markets?limit=800&active=true&closed=false";
+
 // ----------------------------
 // INIT APP
 // ----------------------------
@@ -348,6 +351,7 @@ app.get("/api/prediction/markets", async (req, res) => {
   }
 });
 
+
 // ----------------------------
 // RANDOM MARKET API (updated & working) 
 // ----------------------------
@@ -443,7 +447,18 @@ async function getRandomYesNoMarket() {
 
   return valid[Math.floor(Math.random() * valid.length)];
 }
-
+// -----------------------------
+// SINGLE RANDOM YES/NO QUESTION
+// -----------------------------
+app.get("/api/polymarket-question", async (req, res) => {
+  try {
+    const q = await getRandomYesNoMarket();
+    res.json(q);
+  } catch (e) {
+    console.error("ERROR loading question:", e);
+    res.status(500).json({ error: "Failed to load question" });
+  }
+});
 // ==============================
 // PLACE BET
 // ==============================
