@@ -331,11 +331,8 @@ app.get("/api/prediction/markets", async (req, res) => {
 });
 
 // ----------------------------
-// RANDOM MARKET API (updated & working)
+// RANDOM MARKET API (updated & working) 
 // ----------------------------
-const GAMMA_URL =
-  "https://gamma-api.polymarket.com/markets?limit=800&active=true&closed=false";
-
 async function getRandomYesNoMarket() {
   const r = await fetch(GAMMA_URL);
   const data = await r.json();
@@ -346,35 +343,34 @@ async function getRandomYesNoMarket() {
   for (const m of data) {
     if (m.closed) continue;
 
-    // END DATE
+    // ===== END DATE (ultra safe) =====
     const rawEnd =
-      m.endDateIso ||
+      m.endTime ||
       m.endDate ||
-      m.events?.[0]?.endDateIso ||
+      m.endDateIso ||
+      m.events?.[0]?.endTime ||
       m.events?.[0]?.endDate;
-
     const endTs = rawEnd ? Date.parse(rawEnd) : null;
-    if (!endTs || endTs <= now) continue;
+    if (!endTs || endTs < now) continue;
 
-    // CREATED DATE — безопасный парсер
+    // ===== CREATED DATE (more tolerant) =====
     const rawCreated =
-      m.createdTime ||
       m.createdAt ||
+      m.createdTime ||
       m.creationTime ||
-      m.events?.[0]?.startDateIso ||
-      null;
+      m.events?.[0]?.startTime ||
+      m.events?.[0]?.startDate;
 
     const createdTs = rawCreated ? Date.parse(rawCreated) : null;
-    if (!createdTs) continue;
 
-    // максимум 90 дней
-    if (now - createdTs > 90 * 24 * 60 * 60 * 1000) continue;
+    // игнорируем только если дата явно > 1.5 года
+    if (createdTs && now - createdTs > 550 * 24 * 60 * 60 * 1000) continue;
 
-    // VOLUME
+    // ===== MIN VOLUME =====
     const volume = Number(m.volume || m.totalVolume || 0);
-    if (volume < 1000) continue;
+    if (volume < 30) continue; // даём больше рынков
 
-    // OUTCOMES
+    // ===== OUTCOMES FIX =====
     let outcomes = m.outcomes;
     let prices = m.outcomePrices;
 
@@ -386,15 +382,24 @@ async function getRandomYesNoMarket() {
     }
 
     if (!Array.isArray(outcomes) || !Array.isArray(prices)) continue;
+    if (outcomes.length !== 2 || prices.length !== 2) continue;
 
-    const yesIdx = outcomes.indexOf("Yes");
-    const noIdx = outcomes.indexOf("No");
+    // Нормализуем outcomes
+    const norm = o =>
+      String(o)
+        .toLowerCase()
+        .replace(/[^a-z]/g, ""); // убираем эмодзи и символы
+
+    const normalized = outcomes.map(norm);
+
+    const yesIdx = normalized.indexOf("yes");
+    const noIdx = normalized.indexOf("no");
     if (yesIdx === -1 || noIdx === -1) continue;
 
-    const yes = Number(prices[yesIdx]);
-    const no = Number(prices[noIdx]);
+    const yes = parseFloat(prices[yesIdx]);
+    const no = parseFloat(prices[noIdx]);
 
-    if (!Number.isFinite(yes) || !Number.isFinite(no)) continue;
+    if (!isFinite(yes) || !isFinite(no)) continue;
 
     valid.push({
       id: m.id,
@@ -407,6 +412,8 @@ async function getRandomYesNoMarket() {
     });
   }
 
+  console.log("VALID MARKETS:", valid.length);
+
   if (!valid.length) {
     return {
       id: "fallback",
@@ -418,17 +425,6 @@ async function getRandomYesNoMarket() {
 
   return valid[Math.floor(Math.random() * valid.length)];
 }
-
-
-app.get("/api/polymarket-question", async (req, res) => {
-  try {
-    const m = await getRandomYesNoMarket();
-    res.json(m);
-  } catch (e) {
-    console.error("Q ERROR:", e);
-    res.status(500).json({ error: "Failed to load question" });
-  }
-});
 
 // ==============================
 // PLACE BET
