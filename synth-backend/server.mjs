@@ -201,18 +201,23 @@ app.post("/api/login", (req, res) => {
     return res.json({ user, created: true });
   }
 
-  // старый пользователь, но avatar пустой – дорисуем
-  if (!user.avatar) {
-    const avatar = generateAvatar(wallet);
-    db.prepare("UPDATE users SET avatar = ? WHERE wallet = ?").run(
-      avatar,
-      wallet
-    );
-    user.avatar = avatar;
-  }
 
-  res.json({ user, created: false });
-});
+  // старый пользователь, но avatar пустой – дорисуем
+if (
+  !user.avatar ||
+  user.avatar === "undefined" ||
+  user.avatar === "null" ||
+  user.avatar.trim() === ""
+) {
+  const avatar = generateAvatar(wallet);
+  db.prepare("UPDATE users SET avatar = ? WHERE wallet = ?").run(
+    avatar,
+    wallet
+  );
+  user.avatar = avatar;
+}
+
+res.json({ user, created: false });
 
 // ----------------------------
 // SET USERNAME
