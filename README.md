@@ -21,7 +21,7 @@
 
 Every question uses *real market sentiment*, ensuring that each round reflects what actual traders believe at that moment.
 
-The game is part of the broader **SynthETH ecosystem**, built around a fixed-supply ERC-20 token that powers rewards, incentives, and future decentralized prediction markets.
+The game is part of the broader **Synth sETH ecosystem**, built around a fixed-supply ERC-20 token that powers rewards, incentives, and future decentralized prediction markets.
 
 ---
 
@@ -31,13 +31,29 @@ The game is part of the broader **SynthETH ecosystem**, built around a fixed-sup
 - YES/NO outcomes weighted by real probability (market odds)
 - Time-limited rounds increase urgency and engagement
 - Score, streaks, and accuracy metrics for competitive gameplay
-- Future integration with on-chain rewards powered by **SynthETH**
+- Future integration with on-chain rewards powered by **Synth sETH**
 
 This creates a bridge between **prediction markets, gaming, and real-time decision-making**.
 
 ---
 
-# 💠 SynthETH Token — Fixed Supply of 40,000,000
+# 💠 Synth sETH Token — Fixed Supply of 40,000,000
+
+Synth sETH is a fixed-supply ERC-20 utility token used within a decentralized
+prediction market protocol on Ethereum.
+
+The token powers binary YES/NO markets where users stake Synth sETH into liquidity
+pools representing different outcomes. Odds are determined by liquidity imbalance,
+and winning participants receive payouts in Synth sETH after market settlement.
+
+Synth sETH is designed solely as a utility token for prediction markets.
+It does not represent equity, ownership, debt, or claims on any entity.
+The token does not guarantee a fixed price or peg to ETH.
+
+Synth sETH is not a stablecoin and does not track the price of ETH.
+Token value is determined entirely by market dynamics.
+This repository and its contents are provided for informational purposes only
+and do not constitute financial, legal, or investment advice.
 
 The SynthETH token underpins the ecosystem with a **fixed, immutable supply of 40M sETH**.
 
