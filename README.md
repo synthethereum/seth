@@ -218,8 +218,5 @@ async function getRandomYesNoMarket() {
 
 ---
 
-# 📄 License
-
-Distributed under the **MIT License**.
 
 <h3 align="center">⚡ Built for the Synth sETH Ecosystem ⚡</h3>
