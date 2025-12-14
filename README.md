@@ -57,7 +57,7 @@ and do not constitute financial, legal, or investment advice.
 
 The SynthETH token underpins the ecosystem with a **fixed, immutable supply of 40M sETH**.
 
-# Security Notice
+## Security Notice
 
 Synth sETH is a clean ERC-20 utility token with no minting, no transfer restrictions, and no privileged owner logic.  
 The contract is fully verified and not a honeypot.
