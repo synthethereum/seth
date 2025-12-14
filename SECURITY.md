@@ -1,109 +1,70 @@
 # Security Policy
 
-## Overview
+## Project Status
 
-Synth sETH is an independent, open-source prediction-market protocol built on Ethereum.  
-This document outlines the security model, token design principles, and responsible disclosure guidelines for the Synth sETH ecosystem.
+Synth sETH is currently in a **pre-deployment phase**.
 
-The primary goal of this policy is to provide transparency around the token’s architecture and clarify common automated security checks performed by third-party tools.
+This repository contains public documentation, protocol specifications, and
+security guidelines for the Synth sETH ecosystem.  
+At this stage, **no ERC-20 token contract has been deployed on-chain**.
 
----
-
-## Token Security Design
-
-The Synth sETH token is implemented as a standard ERC-20 contract with a fixed total supply.
-
-### Core Properties
-
-- **Fixed Supply:** 40,000,000 Synth sETH
-- **Minting:** No mint functions after deployment
-- **Burning:** No mandatory or privileged burn mechanisms
-- **Rebasing:** None
-- **Transfer Taxes / Fees:** None
-- **Blacklist / Whitelist:** None
-- **Pause / Freeze:** None
-- **Proxy / Upgradeability:** None
-- **Owner-Controlled Transfers:** None
-
-The token follows clean ERC-20 semantics and does not introduce custom transfer logic that could restrict selling, transferring, or approving tokens.
-
-Once deployed, the token contract is immutable.
+The first production release of the token contract will be published in a
+subsequent release once the contract is finalized, deployed, and verified.
 
 ---
 
-## Honeypot & Transfer Safety Statement
+## Supported Versions
 
-Synth sETH does **not** restrict token transfers in any direction.
+At the time of writing, the following applies:
 
-Specifically:
-- Tokens can be freely bought and sold on decentralized exchanges
-- There are no conditions under which transfers are blocked
-- No addresses can be frozen or blacklisted
-- No balances can be modified by an owner or administrator
+| Version | Description                               | Supported |
+|--------|-------------------------------------------|-----------|
+| v0.1.0 | Protocol specification & documentation     | ✅ Yes    |
 
-Synth sETH is **not a honeypot**.
-
-Any warnings or flags raised by automated scanners (such as TokenSniffer, Honeypot.is, GoPlus, or similar tools) may be caused by:
-- Early-stage deployment
-- Low initial liquidity
-- Recently verified contracts
-- Heuristic-based false positives
-
-These flags are not indicative of malicious behavior.
+There are currently **no deployed contract versions**.
 
 ---
 
-## Ownership & Privileged Roles
+## Reporting a Vulnerability
 
-The Synth sETH token contract does not grant special privileges that can affect user balances or transfers.
+If you discover a potential security issue related to the Synth sETH project,
+including documentation inconsistencies or future smart contract
+implementations, please report it responsibly.
 
-If ownership is present, it is limited to non-economic administrative actions (e.g., metadata references) and does not allow:
-- Minting
-- Confiscation
-- Forced transfers
-- Trading restrictions
-
-The protocol logic governing prediction markets is developed separately from the token contract and does not modify ERC-20 behavior.
-
----
-
-## Audits & Verification
-
-- The token contract is fully verified on-chain.
-- Source code is publicly available in this repository.
-- No obfuscated logic or hidden functionality is present.
-
-Formal third-party audits may be conducted in later stages as the protocol evolves.
-
----
-
-## Responsible Disclosure
-
-We welcome responsible disclosure of potential security issues.
-
-If you discover a vulnerability or unexpected behavior, please report it privately to:
-
-**Email:** team@syntheth.com
+**Contact:**
+- Email: team@syntheth.com
 
 Please include:
-- A detailed description of the issue
+- A clear description of the issue
 - Steps to reproduce (if applicable)
-- Potential impact assessment
+- Relevant code references or documentation sections
 
-Do **not** publicly disclose vulnerabilities before allowing reasonable time for review and mitigation.
+We aim to acknowledge reports promptly and handle disclosures responsibly.
+
+---
+
+## Scope
+
+This security policy applies to:
+- Documentation and specifications contained in this repository
+- Future smart contract implementations released within this repository
+
+It does **not** apply to:
+- Third-party integrations
+- Frontend applications
+- External protocols or smart contracts
+- Any unofficial deployments or forks
 
 ---
 
 ## Disclaimer
 
-Synth sETH is an experimental decentralized protocol.  
-While care has been taken to minimize risk and attack surface, smart contracts inherently carry risk.
+Synth sETH is an experimental decentralized protocol under active development.
 
-This repository and its contents are provided “as is”, without warranties of any kind.
+All materials in this repository are provided **“as is”**, without warranties of
+any kind.  
+This document does not constitute a bug bounty program and does not imply any
+obligation to provide compensation for reported issues.
 
-Users and integrators are encouraged to perform their own due diligence before interacting with the protocol.
-
----
-
-© 2025 Synth sETH  
-On-chain outcomes, real stakes.
+Users and integrators are encouraged to perform independent due diligence before
+interacting with any future deployments.
