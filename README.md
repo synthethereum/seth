@@ -57,13 +57,24 @@ and do not constitute financial, legal, or investment advice.
 
 The SynthETH token underpins the ecosystem with a **fixed, immutable supply of 40M sETH**.
 
-## Security Notice
+## Security Notice (Pre-Deployment)
 
-Synth sETH is a clean ERC-20 utility token with no minting, no transfer restrictions, and no privileged owner logic.  
-The contract is fully verified and not a honeypot.
+The Synth sETH token is currently in a pre-deployment phase.
 
-## 🏦 1. Instant Locked Liquidity — 20,000,000 sETH (50%)
-Locked permanently to support stability, deep liquidity, AMM pools, and future staking.
+The planned ERC-20 contract is designed to follow a clean, minimal architecture:
+- Fixed total supply
+- No minting after deployment
+- No transfer restrictions
+- No blacklist or pause mechanisms
+- No proxy or upgradeability
+
+Once deployed, the token contract will be fully verified on-chain.
+Security properties described above reflect the intended design and will be
+auditable after deployment.
+
+## 🏦 1. Planned Locked Liquidity — 20,000,000 sETH (50%)
+Intended to be locked permanently after deployment to support stability,
+liquidity provisioning, and long-term ecosystem alignment.
 
 ## 🎁 2. Community Incentives & Airdrop Pool — 15,000,000 sETH (37.5%)
 Reserved for early adopters, players, contributors, and growth programs.
