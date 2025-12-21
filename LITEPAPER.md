@@ -71,7 +71,7 @@ Synth sETH does not represent equity, ownership, or claims on any entity.
 
 The total fixed supply of **40,000,000 Synth sETH** is allocated as follows:
 
-- **20,000,000 sETH (50%) — Lock**  
+- **20,000,000 sETH (50%) — Structural Lock**  
   Intended to be locked indefinitely to reinforce supply immutability and remove emission risk.
 
 - **15,000,000 sETH (37.5%) — Community Incentives**  
