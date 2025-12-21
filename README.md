@@ -73,7 +73,7 @@ Security properties described above reflect the intended design and will be
 auditable after deployment.
 
 ## 🏦 1. Planned Locked Liquidity — 20,000,000 sETH (50%)
-Intended to be locked permanently after deployment to support stability,
+Intended to be locked after deployment to support stability,
 liquidity provisioning, and long-term ecosystem alignment.
 
 ## 🎁 2. Community Incentives & Airdrop Pool — 15,000,000 sETH (37.5%)
