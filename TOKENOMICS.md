@@ -39,7 +39,7 @@ The token contract is intended to be immutable and minimal.
 
 The total supply is allocated as follows:
 
-### 3.1 Supply Lock  — 20,000,000 sETH (50%)
+### 3.1 Structural Lock  — 20,000,000 sETH (50%)
 
 - Intended to be locked indefinitely
 - Reinforces long-term supply immutability
