@@ -37,7 +37,7 @@ This creates a bridge between **prediction markets, gaming, and real-time decisi
 
 ---
 
-# 💠 Synth sETH Token — Fixed Supply of 40,000,000
+# 💠 Synth sETH Token — Fixed Supply of 70,000,000
 
 Synth sETH is a fixed-supply ERC-20 utility token used within a decentralized
 prediction market protocol on Ethereum.
@@ -55,7 +55,7 @@ Token value is determined entirely by market dynamics.
 This repository and its contents are provided for informational purposes only
 and do not constitute financial, legal, or investment advice.
 
-The SynthETH token underpins the ecosystem with a **fixed, immutable supply of 40M sETH**.
+The SynthETH token underpins the ecosystem with a **fixed, immutable supply of 70M sETH**.
 
 ## Security Notice (Pre-Deployment)
 
@@ -72,36 +72,36 @@ Once deployed, the token contract will be fully verified on-chain.
 Security properties described above reflect the intended design and will be
 auditable after deployment.
 
-## 🏦 1. Planned Locked Liquidity — 20,000,000 sETH (50%)
+## 🏦 1. Planned Locked Liquidity — 21,000,000 sETH
 Intended to be locked after deployment to support stability,
 liquidity provisioning, and long-term ecosystem alignment.
 
-## 🎁 2. Community Incentives & Airdrop Pool — 15,000,000 sETH (37.5%)
+## 🎁 2. Community Incentives & Airdrop Pool — 25,000,000 sETH
 Reserved for early adopters, players, contributors, and growth programs.
 
-## 🔧 3. Ecosystem & Operations — 5,000,000 sETH (12.5%)
+## 🔧 3. Ecosystem & Operations — 21,000,000 sETH
 Used for audits, infrastructure, protocol development, integrations, and sustainability.
 
 ---
 
 # 🎁 Airdrop Allocation (15,000,000 sETH — 37.5%)
 
-| Category               | %     | Allocation     |
-|------------------------|-------|----------------|
-| Community Airdrop      | 15%   | 6,000,000      |
-| Early Contributors     | 10%   | 4,000,000      |
-| Marketing Airdrop      | 7.5%  | 3,000,000      |
-| Partnerships / Promo   | 5%    | 2,000,000      |
-| **Total**              | 37.5% | **15,000,000** |
+| Category               | Allocation  |
+|------------------------|-------------|
+| Community Airdrop      |10,000,000   |
+| Early Contributors     |10,000,000   |
+| Marketing Airdrop      |3,000,000    |
+| Partnerships / Promo   |2,000,000    |
+| **Total**              | **25,000,000** |
 
 ## 📊 Airdrop Distribution Diagram
 
 ```mermaid
 pie title Synth sETH Airdrop Allocation
-    "Community Airdrop (15%)" : 6000000
-    "Early Contributors (10%)" : 4000000
-    "Marketing Airdrop (7.5%)" : 3000000
-    "Partnerships / Promo (5%)" : 2000000
+    "Community Airdrop " : 10000000
+    "Early Contributors " : 10000000
+    "Marketing Airdrop " : 3000000
+    "Partnerships / Promo " : 2000000
 ```
 
 ---
