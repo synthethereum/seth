@@ -84,7 +84,7 @@ Used for audits, infrastructure, protocol development, integrations, and sustain
 
 ---
 
-# 🎁 Airdrop Allocation (15,000,000 sETH — 37.5%)
+# 🎁 Airdrop Allocation (25,000,000 sETH)
 
 | Category               | Allocation  |
 |------------------------|-------------|
