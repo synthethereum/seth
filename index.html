@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SynthETH – Prediction Markets Powered by SynthETH</title>
+    <title>Synth sETH — On-chain Prediction Markets</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link
@@ -71,7 +71,7 @@
     <!-- Logo -->
     <div class="flex items-center gap-3 cursor-pointer" onclick="window.location.href='index.html'">
       <img src="images/synthseth.png" class="w-8 h-8 rounded-full" />
-      <span class="text-white text-xl font-bold">SynthETH</span>
+      <span class="text-white text-xl font-bold">Synth sETH</span>
     </div>
 
     <!-- Desktop Menu -->
@@ -80,12 +80,8 @@
       <a href="#utility" class="hover:text-white transition">Features</a>
       <a href="#tokenomics" class="hover:text-white transition">Tokenomics</a>
       <a href="#roadmap" class="hover:text-white transition">Roadmap</a>
-      <a href="#faq" class="hover:text-white transition">FAQ</a>
 
-      <a href="#"
-        class="bg-yellow-400 text-slate-900 px-5 py-2 rounded-lg font-semibold hover:bg-yellow-300 transition">
-        Predictions
-      </a>
+
     </div>
 
     <!-- Mobile Burger -->
@@ -129,25 +125,19 @@
         <h1
           class="text-5xl md:text-7xl font-extrabold text-white mb-4 tracking-tight"
         >
-          SynthETH
+          Synth sETH
         </h1>
         <p class="text-sm uppercase tracking-[0.25em] text-teal-400 mb-4">
-          Synthetic Outcomes. Real Stakes.
+          On-chain outcomes, real stakes.
         </p>
         <p class="text-lg md:text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
-          SynthETH is a fixed-supply ERC-20 token powering binary prediction
-          markets. Stake YES or NO on real-world and on-chain events, let pooled
-          liquidity set the odds, and receive payouts in SynthETH after outcome
-          settlement.
+          Synth sETH is a fixed-supply ERC-20 token powering on-chain prediction markets.
+Users stake YES or NO on real-world and on-chain events, where pooled liquidity
+defines odds and payouts are settled transparently in Synth sETH.
         </p>
 
         <div class="flex flex-wrap justify-center gap-4 mb-8">
-          <a
-            href="TBD"
-            class="bg-teal-500 text-slate-900 font-bold py-3 px-8 rounded-lg text-lg hover:bg-teal-400 transition-all duration-300 btn-glow"
-          >
-            Launch Prediction App (Soon)
-          </a>
+          
           <button
             id="open-whitepaper-btn"
             class="bg-slate-800 text-white font-semibold py-3 px-8 rounded-lg text-lg hover:bg-slate-700 transition-all duration-300"
@@ -189,7 +179,7 @@
           class="glass-effect rounded-xl p-6 max-w-2xl mx-auto mt-8 space-y-4"
         >
           <p class="text-sm text-slate-400">
-            Enter your Ethereum wallet address to join the SynthETH prediction
+            Enter your Ethereum wallet address to join the Synth sETH prediction
             game.
           </p>
 
@@ -235,6 +225,42 @@
 
           <p id="usernameFeedback" class="text-teal-400 text-sm h-4"></p>
         </div>
+        <div id="logged-box" 
+  class="glass-effect rounded-xl p-6 max-w-2xl mx-auto mt-8 hidden">
+
+  <p class="text-center text-sm text-teal-400 font-semibold mb-4">
+    You are logged in
+  </p>
+
+  <div class="flex flex-col items-center mb-4">
+    <img id="loggedAvatar" class="w-20 h-20 rounded-xl border border-teal-400 mb-3 shadow-lg" />
+  </div>
+
+  <div class="space-y-2 text-center">
+    <p class="text-slate-300 text-lg">
+      <strong class="text-teal-300">Username:</strong>
+      <span id="loggedName" class="text-white font-semibold"></span>
+    </p>
+
+    <p class="text-slate-300 text-lg break-all">
+      <strong class="text-teal-300">Wallet:</strong>
+      <span id="loggedWallet" class="text-white font-semibold"></span>
+    </p>
+  </div>
+
+  <button 
+    class="w-full bg-yellow-400 text-slate-900 font-bold py-3 rounded-lg text-lg hover:bg-yellow-300 transition mt-6"
+    onclick="window.location.href='mode.html'">
+    Enter Game Modes
+  </button>
+
+  <button 
+    id="logoutFromIndex"
+    class="w-full bg-slate-800 text-slate-300 font-medium py-2 rounded-lg text-sm hover:bg-slate-700 transition mt-3">
+    Logout
+  </button>
+</div>
+
       </div>
     </header>
 
@@ -243,7 +269,7 @@
       <!-- Links Section -->
       <section id="links" class="text-center mb-24 fade-section">
         <h2 class="text-3xl font-bold text-white mb-8">
-          Join the SynthETH Ecosystem
+          Join the Synth sETH Ecosystem
         </h2>
         <div
           class="flex flex-wrap justify-center items-center gap-6 text-base md:text-lg"
@@ -293,28 +319,23 @@
         </h2>
         <div class="glass-effect p-8 md:p-10 rounded-2xl space-y-5">
           <p class="text-lg text-slate-300 leading-relaxed">
-            <span class="text-teal-300 font-semibold">SynthETH</span> is a
-            prediction-market token and protocol built on Ethereum. Users stake
-            SynthETH into YES/NO pools on binary markets – from crypto price
-            targets and sports events to social narratives, elections and
-            on-chain milestones.
+            <span class="text-teal-300 font-semibold">Synth sETH</span> is a prediction-market token and protocol built on Ethereum. Users stake Synth sETH into YES/NO liquidity pools across binary markets — ranging from crypto price targets and sports outcomes to social narratives, on-chain milestones, and broader real-world events.
           </p>
           <p class="text-lg text-slate-300 leading-relaxed">
-            The imbalance between YES and NO liquidity automatically creates
-            real-time odds. After a market is resolved using verifiable data,
-            winning side participants receive payouts in SynthETH, turning every
-            settled event into a redistribution of belief-weighted stakes.
+            
+Imbalances between YES and NO liquidity dynamically generate real-time odds. Once a market is resolved using verifiable data sources, participants on the winning side receive payouts in Synth sETH, turning each resolved event into a transparent redistribution of belief-weighted stakes.
           </p>
           <p class="text-lg text-slate-300 leading-relaxed">
             The name
-            <span class="text-teal-300 font-semibold">SynthETH</span> now stands
-            for
-            <span class="font-semibold"
-              >“Synthetic Outcomes. Real Stakes.”</span
+            <span class="text-teal-300 font-semibold">Synth sETH</span> reflects the principle of 
+            <span class="text-teal-300 font-semibold"
+              >“On-chain outcomes, real stakes.”</span
             >
-            Instead of synthetic price-tracking assets, SynthETH powers
-            synthetic prediction markets – markets constructed entirely from
-            user belief, on-chain liquidity and transparent settlement.
+           Rather than representing price-tracking assets, Synth sETH powers
+belief-driven prediction markets — market structures constructed entirely
+from user conviction, on-chain liquidity, and transparent settlement
+mechanisms.
+
           </p>
         </div>
       </section>
@@ -333,7 +354,7 @@
                 1. Market Participation
               </h3>
               <p>
-                Users stake SynthETH into YES or NO pools on any active market.
+                Users stake Synth sETH into YES or NO pools on any active market.
                 The token is the base currency for all positions across the
                 protocol.
               </p>
@@ -343,7 +364,7 @@
                 2. Settlement Currency
               </h3>
               <p>
-                All winning payouts are made in SynthETH, creating recurring
+                All winning payouts are made in Synth sETH, creating recurring
                 on-chain demand whenever markets are resolved and rewards are
                 distributed.
               </p>
@@ -381,7 +402,7 @@
                 5. Ecosystem Alignment
               </h3>
               <p>
-                SynthETH is the single asset that connects users, liquidity
+                Synth sETH is the single asset that connects users, liquidity
                 providers, market creators and governance participants into one
                 aligned prediction ecosystem.
               </p>
@@ -426,7 +447,7 @@
                 >
               </p>
               <p class="mt-3">
-                The more SynthETH flows into one side, the more attractive the
+                The more Synth sETH flows into one side, the more attractive the
                 opposing odds become. No orderbook, no off-chain matching
                 engines – only pooled liquidity and a transparent formula.
               </p>
@@ -496,7 +517,7 @@
                 <li>resolved outcomes and dispute actions</li>
               </ul>
               <p class="mt-3">
-                This makes SynthETH natively compatible with explorers,
+                This makes Synth sETH natively compatible with explorers,
                 analytics dashboards, and third-party monitoring tools that can
                 build on top of the data layer.
               </p>
@@ -506,78 +527,11 @@
       </section>
 
       <!-- Tokenomics Section -->
-      <section id="tokenomics" class="max-w-4xl mx-auto mb-24 fade-section">
-        <h2 class="text-3xl font-bold text-white text-center mb-12">
-          Tokenomics
-        </h2>
-        <div class="glass-effect p-8 md:p-10 rounded-2xl">
-          <div class="grid md:grid-cols-2 gap-10 text-center">
-            <div>
-              <p class="text-4xl md:text-5xl font-extrabold text-teal-400">
-                30,000,000
-              </p>
-              <p class="text-slate-400 mt-2 text-lg">Total Supply (Fixed)</p>
-            </div>
-            <div>
-              <p class="text-4xl md:text-5xl font-extrabold text-teal-400">
-                Clean ERC-20
-              </p>
-              <p class="text-slate-400 mt-2 text-lg">
-                No Minting • No Rebasing • No Taxes
-              </p>
-            </div>
-          </div>
-
-          <div class="mt-10 border-t border-slate-800 pt-8">
-            <h3 class="text-xl font-semibold text-white mb-4">
-              Supply Breakdown
-            </h3>
-            <div class="grid md:grid-cols-3 gap-6 text-sm md:text-base">
-              <div class="bg-slate-900/70 rounded-xl p-4">
-                <p class="font-semibold text-teal-300 mb-1">Permanent Lock</p>
-                <p class="text-2xl font-bold">20,000,000</p>
-                <p class="text-slate-400 mt-1">
-                  Locked indefinitely to remove emission risk and reinforce the
-                  fixed-supply narrative.
-                </p>
-              </div>
-              <div class="bg-slate-900/70 rounded-xl p-4">
-                <p class="font-semibold text-teal-300 mb-1">
-                  Community Airdrop
-                </p>
-                <p class="text-2xl font-bold">5,000,000</p>
-                <p class="text-slate-400 mt-1">
-                  Reserved for early users, prediction-market participants and
-                  ecosystem campaigns via transparent on-chain distributions.
-                </p>
-              </div>
-              <div class="bg-slate-900/70 rounded-xl p-4">
-                <p class="font-semibold text-teal-300 mb-1">Ecosystem & Ops</p>
-                <p class="text-2xl font-bold">5,000,000</p>
-                <p class="text-slate-400 mt-1">
-                  Liquidity seeding, integrations, infra, audits, oracle costs
-                  and long-term protocol development.
-                </p>
-              </div>
-            </div>
-
-            <p class="mt-6 text-sm text-slate-400">
-              Circulating supply is defined as
-              <strong class="text-teal-300"
-                >circulating = total supply − permanently locked supply</strong
-              >. At genesis this equals
-              <strong class="text-teal-300">10,000,000 SynthETH</strong>. The
-              airdrop allocation remains unchanged and will be distributed in
-              stages as the prediction platform evolves.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Why SynthETH Section -->
+      <!-- Tokenomics Section --> <section id="tokenomics" class="max-w-4xl mx-auto mb-24 fade-section"> <h2 class="text-3xl font-bold text-white text-center mb-12"> Tokenomics </h2> <div class="glass-effect p-8 md:p-10 rounded-2xl"> <div class="grid md:grid-cols-2 gap-10 text-center"> <div> <p class="text-4xl md:text-5xl font-extrabold text-teal-400"> 70,000,000 </p> <p class="text-slate-400 mt-2 text-lg">Total Supply (Fixed)</p> </div> <div> <p class="text-4xl md:text-5xl font-extrabold text-teal-400"> Clean ERC-20 </p> <p class="text-slate-400 mt-2 text-lg"> No Minting • No Rebasing • No Taxes </p> </div> </div> <div class="mt-10 border-t border-slate-800 pt-8"> <h3 class="text-xl font-semibold text-white mb-4"> Supply Breakdown </h3> <div class="grid md:grid-cols-3 gap-6 text-sm md:text-base"> <div class="bg-slate-900/70 rounded-xl p-4"> <p class="font-semibold text-teal-300 mb-1">Structural Lock</p> <p class="text-2xl font-bold">21,000,000</p> <p class="text-slate-400 mt-1"> Locked indefinitely to remove emission risk and reinforce the fixed-supply narrative. </p> </div> <div class="bg-slate-900/70 rounded-xl p-4"> <p class="font-semibold text-teal-300 mb-1"> Community Airdrop </p> <p class="text-2xl font-bold">25,000,000</p> <p class="text-slate-400 mt-1"> Reserved for early users, prediction-market participants and ecosystem campaigns via transparent on-chain distributions. </p> </div> <div class="bg-slate-900/70 rounded-xl p-4"> <p class="font-semibold text-teal-300 mb-1">Ecosystem & Ops</p> <p class="text-2xl font-bold">24,000,000</p> <p class="text-slate-400 mt-1"> Liquidity seeding, integrations, infra, audits, oracle costs and long-term protocol development. </p> </div> </div> <p class="mt-6 text-sm text-slate-400"> Circulating supply is defined as <strong class="text-teal-300" >circulating = total supply − structuraly locked supply</strong >. At genesis this equals <strong class="text-teal-300">49,000,000 Synth sETH</strong>. The airdrop allocation remains unchanged and will be distributed in stages as the prediction platform evolves. </p> </div> </div> </section>
+      <!-- Why Synth sETH Section -->
       <section class="max-w-4xl mx-auto mb-24 fade-section">
         <h2 class="text-3xl font-bold text-white text-center mb-12">
-          Why SynthETH?
+          Why Synth sETH?
         </h2>
         <div
           class="glass-effect p-8 md:p-10 rounded-2xl grid md:grid-cols-2 gap-8"
@@ -601,7 +555,7 @@
               <span class="text-teal-400 font-semibold"
                 >&bull; Composable:</span
               >
-              strict ERC-20 behavior makes SynthETH easy to integrate into
+              strict ERC-20 behavior makes Synth sETH easy to integrate into
               DEXes, dashboards and DeFi legos.
             </p>
           </div>
@@ -610,7 +564,7 @@
               <span class="text-teal-400 font-semibold"
                 >&bull; Transparent economics:</span
               >
-              fixed 30M supply, clear lockups and public tracking of incentives.
+              fixed 70M supply, clear lockups and public tracking of incentives.
             </p>
             <p>
               <span class="text-teal-400 font-semibold"
@@ -670,7 +624,7 @@
                 class="list-disc list-inside text-slate-300 space-y-1 text-sm md:text-base"
               >
                 <li>
-                  Launch of mainnet SynthETH token (fixed 30M supply, clean
+                  Launch of mainnet Synth sETH token (fixed 70M supply, clean
                   ERC-20)
                 </li>
                 <li>YES/NO market contracts with pooled liquidity model</li>
@@ -720,7 +674,7 @@
                   Social sharing and referral mechanics for prediction markets
                 </li>
                 <li>
-                  Progressive rollout of the 5M SynthETH community airdrop
+                  Progressive rollout of the 25M Synth sETH community airdrop
                 </li>
               </ul>
             </div>
@@ -768,25 +722,30 @@
         </div>
       </section>
     </main>
+<!-- Footer -->
+<footer class="bg-slate-950 border-t border-slate-800">
+  <div class="container mx-auto px-6 py-8 text-center text-slate-500 text-sm">
+    <p>&copy; 2025 Synth sETH. All Rights Reserved.</p>
 
-    <!-- Footer -->
-    <footer class="bg-slate-950 border-t border-slate-800">
-      <div
-        class="container mx-auto px-6 py-8 text-center text-slate-500 text-sm"
-      >
-        <p>&copy; 2025 SynthETH. All Rights Reserved.</p>
-        <div class="flex justify-center gap-6 mt-4">
-          <a href="https://x.com/synthseth" class="hover:text-teal-400"
-            >X (Twitter)</a
-          >
-          <a href="TBD" class="hover:text-teal-400">Telegram</a>
-          <a href="TBD" class="hover:text-teal-400">Etherscan</a>
-          <a href="mailto:team@syntheth.com" class="hover:text-teal-400">
-            team@syntheth.com
-          </a>
-        </div>
-      </div>
-    </footer>
+    <!-- Links -->
+    <div class="flex justify-center gap-6 mt-4">
+      <a href="https://x.com/synthseth" class="hover:text-teal-400">X (Twitter)</a>
+      <a href="https://t.me/synthseth" target="_blank" class="hover:text-teal-400">Telegram</a>
+      <a href="TBD" class="hover:text-teal-400">Etherscan</a>
+      <a href="mailto:team@syntheth.com" class="hover:text-teal-400">team@syntheth.com</a>
+      <a href="https://github.com/synthethereum" class="hover:text-teal-400">GitHub</a>
+    </div>
+
+    <!-- Disclaimer -->
+    <div class="mt-6 border border-slate-800 bg-slate-900/40 rounded-xl px-6 py-4">
+      <p class="text-xs text-slate-400 leading-relaxed max-w-4xl mx-auto">
+        Synth sETH is an independent ERC-20 utility token used within a prediction
+        market protocol.It is not a stablecoin, and does not guarantee a fixed
+        price or peg to ETH. Token value is determined solely by market dynamics.
+      </p>
+    </div>
+  </div>
+</footer>
 
     <!-- Litepaper Modal -->
     <div
@@ -800,7 +759,7 @@
           class="flex justify-between items-center p-6 border-b border-slate-800 flex-shrink-0"
         >
           <h2 class="text-2xl font-bold text-white">
-            SynthETH – Prediction Markets Litepaper v1.0
+            Synth sETH – Prediction Markets Litepaper v0.1 (Pre-Deployment)
           </h2>
           <button
             id="close-whitepaper-btn"
@@ -826,145 +785,150 @@
           id="whitepaper-content"
           class="p-8 text-slate-300 leading-relaxed text-left overflow-y-auto space-y-8 text-sm md:text-base"
         >
-          <section>
-            <h3 class="text-xl font-semibold text-white mb-2">1. Abstract</h3>
-            <p>
-              <span class="text-teal-300 font-semibold">SynthETH</span> is a
-              fixed-supply ERC-20 token (30,000,000 units) that powers a binary
-              prediction-market protocol on Ethereum. Users stake SynthETH into
-              YES/NO pools on real-world and on-chain events, with odds
-              determined by liquidity and payouts settled in SynthETH after
-              outcomes are verified.
-            </p>
-          </section>
+         <section>
+  <h3 class="text-xl font-semibold text-white mb-2">1. Abstract</h3>
+  <p>
+    <span class="text-teal-300 font-semibold">Synth sETH</span> is a
+    <span class="text-teal-300 font-semibold">prediction-market protocol</span>
+    and a fixed-supply ERC-20 utility token built on Ethereum.
+    Users stake Synth sETH into
+    <span class="text-teal-300 font-semibold">binary YES / NO markets</span>
+    where probabilities emerge directly from on-chain liquidity.
+  </p>
+  <p class="mt-2">
+    Rather than relying on order books or centralized market makers,
+    Synth sETH enables outcomes to be priced, traded and settled
+    <span class="text-teal-300 font-semibold">entirely on-chain</span>,
+    with winning participants receiving payouts in Synth sETH
+    after transparent outcome verification.
+  </p>
+</section>
+
 
           <section>
-            <h3 class="text-xl font-semibold text-white mb-2">
-              2. Narrative & Vision
-            </h3>
-            <p class="mb-2">
-              Under the banner
-              <span class="text-teal-300 font-semibold"
-                >“Synthetic Outcomes. Real Stakes.”</span
-              >, SynthETH repurposes the idea of “synthetics” from
-              price-mirroring assets to <strong>synthetic markets</strong> —
-              markets where every event becomes a tradable binary asset
-              constructed from user belief and on-chain liquidity.
-            </p>
-            <p>
-              The vision is to create a composable, transparent and
-              high-engagement prediction layer for Ethereum, where anyone can
-              express a view on future states of the world, and where those
-              views are priced, traded and settled in a single, clean ERC-20
-              asset.
-            </p>
-          </section>
+  <h3 class="text-xl font-semibold text-white mb-2">
+    2. Narrative & Vision
+  </h3>
+  <p class="mb-2">
+    Under the principle
+    <span class="text-teal-300 font-semibold">
+      “On-chain outcomes, real stakes.”
+    </span>
+    Synth sETH reframes the idea of synthetics away from price-mirroring assets
+    toward <strong class="text-teal-300">outcome-driven markets</strong> —
+    markets where beliefs themselves become tradable positions.
+  </p>
+  <p>
+    The long-term vision is to establish Synth sETH as a
+    <span class="text-teal-300 font-semibold">neutral settlement asset</span>
+    for decentralized prediction markets, fully composable with DeFi,
+    analytics tools and future governance systems.
+  </p>
+</section>
+
 
           <section>
-            <h3 class="text-xl font-semibold text-white mb-2">
-              3. Core Design
-            </h3>
-            <ul class="list-disc list-inside space-y-1">
-              <li>
-                <strong>Binary markets:</strong> each market has YES and NO
-                pools.
-              </li>
-              <li>
-                <strong>Liquidity-defined odds:</strong> odds are a simple
-                function of opposite-side liquidity.
-              </li>
-              <li>
-                <strong>On-chain state:</strong> stakes, outcomes and payouts
-                are transparent and verifiable.
-              </li>
-              <li>
-                <strong>Single settlement asset:</strong> all positions and
-                rewards use SynthETH.
-              </li>
-            </ul>
-            <p class="mt-2">
-              This design keeps the protocol simple enough for early-stage
-              experimentation, while being flexible enough to support advanced
-              oracle and governance structures later on.
-            </p>
-          </section>
+  <h3 class="text-xl font-semibold text-white mb-2">
+    3. Core Design
+  </h3>
+  <ul class="list-disc list-inside space-y-1">
+    <li>
+      <strong class="text-teal-300">Binary markets:</strong>
+      each event resolves as YES or NO.
+    </li>
+    <li>
+      <strong class="text-teal-300">Liquidity-defined odds:</strong>
+      probabilities are derived directly from opposing-side liquidity.
+    </li>
+    <li>
+      <strong class="text-teal-300">Fully on-chain state:</strong>
+      all stakes, payouts and outcomes are transparent and verifiable.
+    </li>
+    <li>
+      <strong class="text-teal-300">Single settlement asset:</strong>
+      all positions and rewards use Synth sETH.
+    </li>
+  </ul>
+  <p class="mt-2 text-slate-400">
+    No order books, no centralized matching engines,
+    and no discretionary settlement logic at the core layer.
+  </p>
+</section>
 
           <section>
-            <h3 class="text-xl font-semibold text-white mb-2">
-              4. Token Specification
-            </h3>
-            <ul class="space-y-1">
-              <li><strong>Name:</strong> SynthETH</li>
-              <li><strong>Standard:</strong> ERC-20</li>
-              <li><strong>Network:</strong> Ethereum Mainnet</li>
-              <li><strong>Decimals:</strong> 18</li>
-              <li>
-                <strong>Total Supply:</strong> 30,000,000 SynthETH (fixed)
-              </li>
-              <li><strong>Minting:</strong> none after deployment</li>
-              <li>
-                <strong>Tax / Rebasing:</strong> none – clean transfer semantics
-              </li>
-            </ul>
-          </section>
+  <h3 class="text-xl font-semibold text-white mb-2">
+    4. Token Specification
+  </h3>
+  <ul class="space-y-1">
+    <li><strong>Name:</strong> Synth sETH</li>
+    <li><strong>Standard:</strong> ERC-20</li>
+    <li><strong>Network:</strong> Ethereum Mainnet</li>
+    <li><strong>Decimals:</strong> 18</li>
+    <li>
+      <strong>Total Supply:</strong>
+      <span class="text-teal-300 font-semibold">
+        70,000,000 Synth sETH (fixed)
+      </span>
+    </li>
+    <li>
+      <strong>Minting:</strong>
+      <span class="text-teal-300 font-semibold">none after deployment</span>
+    </li>
+    <li>
+      <strong>Transfer logic:</strong>
+      no taxes, no rebasing, no restrictions
+    </li>
+  </ul>
+</section>
 
           <section>
-            <h3 class="text-xl font-semibold text-white mb-2">
-              5. Token Utility
-            </h3>
-            <p class="mb-2">
-              SynthETH is the native asset of the prediction protocol:
-            </p>
-            <ul class="list-disc list-inside space-y-1">
-              <li>
-                <strong>Staking asset:</strong> users stake SynthETH for YES/NO
-                positions.
-              </li>
-              <li>
-                <strong>Settlement unit:</strong> winners are paid in SynthETH
-                after markets resolve.
-              </li>
-              <li>
-                <strong>Fee unit:</strong> protocol fees are denominated and
-                collected in SynthETH.
-              </li>
-              <li>
-                <strong>Governance:</strong> holders participate in governance
-                over markets, parameters and incentives.
-              </li>
-            </ul>
-          </section>
+  <h3 class="text-xl font-semibold text-white mb-2">
+    5. Token Utility
+  </h3>
+  <ul class="list-disc list-inside space-y-1">
+    <li>
+      <strong class="text-teal-300">Market participation:</strong>
+      staking Synth sETH into YES / NO pools.
+    </li>
+    <li>
+      <strong class="text-teal-300">Settlement currency:</strong>
+      all winning payouts are denominated in Synth sETH.
+    </li>
+    <li>
+      <strong class="text-teal-300">Fee accounting:</strong>
+      protocol fees are collected in Synth sETH.
+    </li>
+    <li>
+      <strong class="text-teal-300">Governance alignment:</strong>
+      participation in market parameters and future protocol decisions.
+    </li>
+  </ul>
+</section>
 
           <section>
-            <h3 class="text-xl font-semibold text-white mb-2">
-              6. Tokenomics & Distribution
-            </h3>
-            <p class="mb-2">Total supply is allocated as follows:</p>
-            <ul class="list-disc list-inside space-y-1">
-              <li>
-                <strong>20,000,000 SynthETH – Permanent Lock</strong>: locked
-                indefinitely to remove emission risk and support the
-                fixed-supply narrative.
-              </li>
-              <li>
-                <strong>5,000,000 SynthETH – Community Airdrop</strong>: rewards
-                for early users, market creators and active participants across
-                multiple campaign waves.
-              </li>
-              <li>
-                <strong>5,000,000 SynthETH – Ecosystem & Operations</strong>:
-                liquidity provision, protocol development, audits, oracle costs
-                and strategic partnerships.
-              </li>
-            </ul>
-            <p class="mt-2 text-sm text-slate-400">
-              Circulating supply is defined as
-              <span class="text-teal-300"
-                >total supply minus permanently locked supply</span
-              >
-              and is initially 10,000,000 SynthETH.
-            </p>
-          </section>
+  <h3 class="text-xl font-semibold text-white mb-2">
+    6. Tokenomics & Distribution
+  </h3>
+  <ul class="list-disc list-inside space-y-1">
+    <li>
+      <strong class="text-teal-300">21,000,000 sETH (50%) — Structural Lock</strong><br>
+      Intended to be locked indefinitely to reinforce supply immutability.
+    </li>
+    <li>
+      <strong class="text-teal-300">25,000,000 sETH (37.5%) — Community Incentives</strong><br>
+      Distributed gradually to early users and market participants.
+    </li>
+    <li>
+      <strong class="text-teal-300">24,000,000 sETH (12.5%) — Ecosystem & Operations</strong><br>
+      Liquidity, infrastructure, audits and protocol development.
+    </li>
+  </ul>
+  <p class="mt-2 text-sm text-slate-400">
+    Circulating supply is defined as
+    <span class="text-teal-300">total supply minus structualy locked supply</span>.
+  </p>
+</section>
+
 
           <section>
             <h3 class="text-xl font-semibold text-white mb-2">
@@ -1017,22 +981,22 @@
           </section>
 
           <section>
-            <h3 class="text-xl font-semibold text-white mb-2">
-              9. Risks & Disclaimer
-            </h3>
-            <p class="text-sm text-slate-400 italic">
-              Prediction markets involve financial risk, regulatory uncertainty
-              and potential oracle failures. SynthETH does not represent equity,
-              debt or a claim on any entity and does not guarantee returns. This
-              document is for informational purposes only and does not
-              constitute financial, legal or tax advice. Participants should
-              perform their own due diligence and comply with laws applicable in
-              their jurisdiction.
-            </p>
-          </section>
+  <h3 class="text-xl font-semibold text-white mb-2">
+    9. Risks & Disclaimer
+  </h3>
+  <p class="text-sm text-slate-400 italic">
+    Prediction markets involve financial risk, regulatory uncertainty
+    and potential oracle failures.
+    <span class="text-teal-300 font-semibold">
+      Synth sETH does not represent equity, debt or claims on any entity
+      and does not guarantee returns.
+    </span>
+    This document is for informational purposes only and does not
+    constitute financial, legal or tax advice.
+  </p>
+</section>
+
         </div>
-      </div>
-    </div>
       </div>
     </div>
 
@@ -1112,6 +1076,7 @@
         requestAnimationFrame(animateParticles);
       }
       animateParticles();
+      
 
       // ============ LITEPAPER MODAL ============
       const openBtn = document.getElementById('open-whitepaper-btn');
@@ -1168,126 +1133,194 @@
       }
       updateProgress();
 
-      // ============ AUTH & USERNAME FLOW ============
-      const API_BASE = 'http://localhost:4000';
+ // ============ AUTH & USERNAME FLOW ============
+const API_BASE = "https://seth-qnod.onrender.com";
 
-      const loginBox = document.getElementById('login-box');
-      const usernameBox = document.getElementById('username-box');
-      const walletInput = document.getElementById('walletInput');
-      const walletLoginBtn = document.getElementById('walletLoginBtn');
-      const loginFeedback = document.getElementById('loginFeedback');
-      const usernameInput = document.getElementById('usernameInput');
-      const usernameSaveBtn = document.getElementById('usernameSaveBtn');
-      const usernameFeedback = document.getElementById('usernameFeedback');
+const loginBox = document.getElementById("login-box");
+const usernameBox = document.getElementById("username-box");
+const loggedBox = document.getElementById("logged-box");
 
-      let currentUser = null;
+const walletInput = document.getElementById("walletInput");
+const walletLoginBtn = document.getElementById("walletLoginBtn");
+const loginFeedback = document.getElementById("loginFeedback");
 
-      function saveUser(user) {
-        currentUser = user;
-        localStorage.setItem('syntheth_user', JSON.stringify(user));
-      }
+const usernameInput = document.getElementById("usernameInput");
+const usernameSaveBtn = document.getElementById("usernameSaveBtn");
+const usernameFeedback = document.getElementById("usernameFeedback");
 
-      function loadUser() {
-        try {
-          const raw = localStorage.getItem('syntheth_user');
-          if (!raw) return null;
-          currentUser = JSON.parse(raw);
-          return currentUser;
-        } catch (e) {
-          console.error('Failed to parse user from storage:', e);
-          return null;
-        }
-      }
+let currentUser = null;
 
-      function redirectToGame() {
-        window.location.href = "mode.html";
-      }
+// ---- сохраняем юзера в localStorage ----
+async function saveUser(user) {
+  try {
+    // ВСЕГДА обновляем данные с сервера
+    const res = await fetch(`${API_BASE}/api/user/${user.wallet}`);
+    const data = await res.json();
 
-      document.addEventListener('DOMContentLoaded', () => {
-        const user = loadUser();
-        if (user && user.username) {
-          redirectToGame();
-        }
-      });
+    if (data.user) {
+      user = data.user; // гарантировано avatar, username, balance, всё свежее
+    }
+  } catch (e) {
+    console.error("Failed to fetch full user:", e);
+  }
 
-      walletLoginBtn.addEventListener('click', async () => {
-        loginFeedback.innerText = '';
-        const wallet = (walletInput.value || '').trim();
+  currentUser = user;
+  localStorage.setItem("syntheth_user", JSON.stringify(user));
+}
 
-        if (!wallet || !wallet.startsWith('0x') || wallet.length < 10) {
-          loginFeedback.innerText = 'Please enter a valid wallet address.';
-          return;
-        }
 
-        try {
-          const res = await fetch(`${API_BASE}/api/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ wallet }),
-          });
 
-          const data = await res.json();
+// ---- читаем юзера из localStorage ----
+function loadUser() {
+  try {
+    const raw = localStorage.getItem("syntheth_user");
+    if (!raw) return null;
+    currentUser = JSON.parse(raw);
+    return currentUser;
+  } catch (e) {
+    console.error("Failed to parse user from storage:", e);
+    return null;
+  }
+}
 
-          if (!res.ok || data.error) {
-            loginFeedback.innerText = data.error || 'Login failed.';
-            return;
-          }
+// ---- показываем плашку "вы вошли" ----
+function showLoggedPanel(user) {
+  document.getElementById("loggedName").innerText = user.username;
+  document.getElementById("loggedWallet").innerText = user.wallet;
 
-          saveUser(data.user);
-          loginFeedback.innerText = 'Wallet connected. Set your username.';
-          loginBox.classList.add('hidden');
-          usernameBox.classList.remove('hidden');
-        } catch (e) {
-          console.error(e);
-          loginFeedback.innerText = 'Network error. Please try again.';
-        }
-      });
+const avatarEl = document.getElementById("loggedAvatar");
+  if (avatarEl && user.avatar) {
+    avatarEl.src = user.avatar;
+  }
 
-      usernameSaveBtn.addEventListener('click', async () => {
-        usernameFeedback.innerText = '';
-        const username = (usernameInput.value || '').trim();
+  loginBox.classList.add("hidden");
+  usernameBox.classList.add("hidden");
+  loggedBox.classList.remove("hidden");
+}
 
-        if (!currentUser || !currentUser.wallet) {
-          usernameFeedback.innerText = 'No wallet session. Please reconnect.';
-          loginBox.classList.remove('hidden');
-          usernameBox.classList.add('hidden');
-          return;
-        }
+// ---- куда редиректим после логина ----
+function redirectToGame() {
+  window.location.href = "mode.html";
+}
 
-        if (!username || username.length < 3) {
-          usernameFeedback.innerText =
-            'Username must be at least 3 characters long.';
-          return;
-        }
+// ---- АВТО-ЛОГИН при заходе на index.html ----
+document.addEventListener("DOMContentLoaded", () => {
+  const user = loadUser();
+  if (user && user.username) {
+    showLoggedPanel(user);
+    return; // Никаких редиректов!
+  }
+});
 
-        try {
-          const res = await fetch(`${API_BASE}/api/set-username`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              wallet: currentUser.wallet,
-              username,
-            }),
-          });
+// ---- ЛОГАУТ ИЗ INDEX ----
+document.getElementById("logoutFromIndex")?.addEventListener("click", () => {
+  localStorage.removeItem("syntheth_user");
+  window.location.href = "index.html";
+});
 
-          const data = await res.json();
 
-          if (!res.ok || data.error) {
-            usernameFeedback.innerText = data.error || 'Failed to save name.';
-            return;
-          }
+// ---- КНОПКА "Connect" ----
+walletLoginBtn.addEventListener("click", async () => {
+  loginFeedback.innerText = "";
 
-          saveUser(data.user);
-          usernameFeedback.innerText = 'Username saved. Redirecting to game...';
+  const wallet = (walletInput.value || "").trim();
+  const username = null; // <<< ВАЖНО — передаём пустой username при первом логине
 
-          setTimeout(() => {
-            redirectToGame();
-          }, 800);
-        } catch (e) {
-          console.error(e);
-          usernameFeedback.innerText = 'Network error. Please try again.';
-        }
-      });
+  if (!wallet || !wallet.startsWith("0x") || wallet.length < 10) {
+    loginFeedback.innerText = "Please enter a valid wallet address.";
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ wallet, username }), // <<< ВАЖНО
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      loginFeedback.innerText = data.error || "Login failed.";
+      return;
+    }
+
+    await saveUser(data.user);
+
+    // Если username уже есть → сразу в игру
+    if (data.user.username) {
+      loginFeedback.innerText = "Welcome back!";
+      setTimeout(redirectToGame, 500);
+      return;
+    }
+
+    // Если username ещё нет → показываем форму
+    loginBox.classList.add("hidden");
+    usernameBox.classList.remove("hidden");
+    loginFeedback.innerText = "Wallet connected. Set your username.";
+
+  } catch (e) {
+    console.error(e);
+    loginFeedback.innerText = "Network error. Please try again.";
+  }
+});
+
+
+// ---- СОХРАНЕНИЕ USERNAME ----
+usernameSaveBtn.addEventListener("click", async () => {
+  usernameFeedback.innerText = "";
+  const username = (usernameInput.value || "").trim();
+
+  if (!currentUser || !currentUser.wallet) {
+    usernameFeedback.innerText = "No wallet session. Please reconnect.";
+    loginBox.classList.remove("hidden");
+    usernameBox.classList.add("hidden");
+    return;
+  }
+
+  if (!username || username.length < 3) {
+    usernameFeedback.innerText = "Username must be at least 3 characters long.";
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/set-username`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        wallet: currentUser.wallet,
+        username,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      usernameFeedback.innerText = data.error || "Failed to save name.";
+      return;
+    }
+
+    // 1. временно сохранить старый объект (без аватара)
+    saveUser(data.user);
+
+    // 2. получить ПОЛНОГО юзера с аватаром
+    const full = await fetch(`${API_BASE}/api/user/${currentUser.wallet}`);
+    const fullUser = (await full.json()).user;
+
+    // 3. сохранить обновлённого юзера (с аватаром!)
+    saveUser(fullUser);
+
+    usernameFeedback.innerText = "Username saved. Redirecting...";
+
+    setTimeout(() => redirectToGame(), 800);
+
+  } catch (e) {
+    console.error(e);
+    usernameFeedback.innerText = "Network error. Please try again.";
+  }
+});
+
+
       /* ================= NAVBAR LOGIC ================= */
 
 const navbar = document.getElementById("navbar");
@@ -1309,5 +1342,4 @@ burgerBtn.addEventListener("click", () => {
 });
 
     </script>
-  </body>
-</html>
+
